@@ -25,7 +25,7 @@ class Usuario(db.Model):
     nombre = db.Column(db.String(100), nullable = False)
     apellido = db.Column(db.String(100), nullable = False)
     codigo = db.Column(db.Integer, nullable = False, unique = True)
-    rut = db.Column(db.String, nullable = False, unique = True)
+    rut = db.Column(db.String(100), nullable = False, unique = True)
     rol = db.Column(db.String(100), nullable = False)
     email = db.Column(db.String(100), nullable = False,  unique = True)
     password = db.Column(db.String(100), nullable = False)
