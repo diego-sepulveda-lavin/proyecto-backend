@@ -1,0 +1,18 @@
+class Base:
+    DEBUG = False
+    ENV = 'production'
+    HOST = 'localhost'
+    PORT = 3306
+    USER = ''
+    PASS = ''
+    DATABASE = 'dshl_db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{USER}:{PASS}@{HOST}:{PORT}/{DATABASE}"
+    JWT_SECRET_KEY = "c30b718ee8f8f4950e979b416a49f10a"
+    UPLOAD_FOLDER = 'static'
+
+class Development(Base):
+    DEBUG = True
+    ENV = 'development'
+    USER = ''
+    PASS = ''
