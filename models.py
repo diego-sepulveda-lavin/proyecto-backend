@@ -107,7 +107,7 @@ class Categoria(db.Model):
     nombre = db.Column(db.String(100), nullable = False, unique = True)
 
 class Cuadratura_Caja(db.Model):
-    __tablename__ = "cuadruaturas_cajas"
+    __tablename__ = "cuadraturas_cajas"
     id = db.Column(db.Integer, primary_key = True)
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable = False)
     administrador = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable = False)
