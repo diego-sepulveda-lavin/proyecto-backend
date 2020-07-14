@@ -270,35 +270,36 @@ def proveedores(id = None):
         }
         return jsonify(data), 200
 
-@app.route('/api/productos', methods = ['GET'])
-@app.route("/api/productos/<nombre_producto>", methods=["GET", "POST", "PUT", "DELETE"])
-def productos(nombre_producto = None):
+@app.route('/api/productos', methods = ['GET', "POST"])
+@app.route("/api/productos/<int:id>", methods=["GET", "PUT", "DELETE"])
+def productos(id=None):
     if request.method == 'GET':
-        if nombre_producto is None:
+        if id is None:
             productos = Producto.query.all()
             if productos:
                 productos = list(map(lambda producto: producto.serialize(),productos))
-                return jsonify(productos),200
+                return jsonify(productos), 200
             else:
-                return jsonify({"msg" : "No hay datos de productos"}),400
-        if nombre_producto is not None:
-            producto = Producto.query.filter(Producto.descripcion.ilike(f"%{nombre_producto}")).first()
+                return jsonify({"msg" : "No hay datos de productos"}), 400
+        if id is not None:
+            producto = Producto.query.get(id)
             if producto:
-                return jsonify(producto.serialize()),200
+                return jsonify(producto.serialize()), 200
             else:
-                return jsonify({"msg" : "Producto no encontrado"})
+                return jsonify({"msg" : "Producto no encontrado"}), 400
+
     if request.method == 'POST':
         data = request.get_json()
-        if data["sku"]=="" or data["sku"] == None:
+        if not data["sku"]:
             return jsonify({"msg" : "SKU del producto nuevo no puede estar vacio"})
         
-        if data["descripcion"]=="" or data["descripcion"] == None:
+        if not data["descripcion"]:
             return jsonify({"msg" : "Descripcion del producto nuevo no puede estar vacio"})
         
-        if data["codigo_barra"]=="" or data["codigo_barra"] == None:
+        if not data["codigo_barra"]:
             return jsonify({"msg" : "Codigo de Barra del producto nuevo no puede estar vacio"})
         
-        if data["unidad_entrega"]=="" or data["unidad_entrega"] == None:
+        if not data["unidad_entrega"]:
             return jsonify({"msg" : "Unidad de Entrega del producto nuevo no puede estar vacio"})
         
         if not data["categoria_id"]:
@@ -313,12 +314,33 @@ def productos(nombre_producto = None):
         producto.descripcion = data["descripcion"]
         producto.codigo_barra = data["codigo_barra"]
         producto.unidad_entrega = data["unidad_entrega"]
-        producto.categoria_id = data["categoria_id"]
-
-        db.session.add(producto)
-        db.session.commit()
-
+        producto.categoria_id = data["categoria_id"] #revisar porque es una FK
+        producto.save()
+       
         return jsonify({"msg": "Producto creado exitosamente"}), 201
+
+    if request.method == 'PUT':
+        producto = Producto.query.get(id)
+        if not producto:
+            return jsonify({"msg" : "Producto no encontrado"}), 400
+        else:
+            valor_descripcion = request.json.get("descripcion", None)
+            valor_cantidad = request.json.get("cantidad", None)
+            valor_precio_venta_unitario = request.json.get("precio_venta_unitario", None)
+
+            producto.descripcion = valor_descripcion
+            producto.precio_venta_unitario = valor_precio_venta_unitario
+            producto.update()
+
+            return jsonify({"msg": "Producto actualizado exitosamente"}), 201
+
+    if request.method == 'DELETE':
+        producto = Producto.query.get(id)
+        if producto:
+            return jsonify({"msg" : "Producto eliminado exitosamente"})
+        else:
+            return jsonify({"msg" : "Producto no encontrado"}), 200
+            producto.delete()
 
 if __name__ == "__main__":
     manager.run()
