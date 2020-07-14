@@ -207,9 +207,8 @@ def productos(nombre_producto = None):
         producto.codigo_barra = data["codigo_barra"]
         producto.unidad_entrega = data["unidad_entrega"]
         producto.categoria_id = data["categoria_id"]
-
-        db.session.add(producto)
-        db.session.commit()
+        producto.save()
+       
 
         return jsonify({"msg": "Producto creado exitosamente"}), 201
 
