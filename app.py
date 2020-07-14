@@ -4,7 +4,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
-from models import db
+from models import db, Empresa
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
@@ -21,9 +21,18 @@ jwt = JWTManager(app)
 manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
+
 @app.route('/')
 def home():
     return 'Hola mundo'
+
+@app.route('/api/empresas', methods = ['GET'])
+def empresas():
+    if request.method == 'GET':
+        empresas = Empresa.query.all()
+        empresas = list(map(lambda empresa: empresa.serialize(),empresas))
+        print(empresas)
+        return jsonify(empresas),200
 
 
 if __name__ == "__main__":

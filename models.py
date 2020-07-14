@@ -40,24 +40,24 @@ class Usuario(db.Model):
     status = db.Column(db.Boolean, default = True, nullable = False)
     fecha_registro = db.Column(db.DateTime, nullable = False, default = datetime.now) #hora local
     empresa_id = db.Column(db.Integer, db.ForeignKey("empresas.id"), nullable = False)
-    entradas = db.relationship('Entrada_Inventario', backref = 'usuario', lazy = True)
+    """  entradas = db.relationship('Entrada_Inventario', backref = 'usuario', lazy = True)
     salidas = db.relationship('Salida_Inventario', backref = 'usuario', lazy = True)
     cuadres_usuario = db.relationship('Cuadratura_Caja', backref = 'usuario', lazy = True)
-    cuadres_admin = db.relationship('Cuadratura_Caja', backref = 'admin', lazy = True)
+    cuadres_admin = db.relationship('Cuadratura_Caja', backref = 'admin', lazy = True) """
 
     def serialize(self):
         return {
-            "id" = self.id,
-            "nombre" = self.nombre,
-            "apellido" = self.apellido,
-            "codigo" = self.codigo,
-            "rut" = self.rut,
-            "rol" = self.rol,
-            "email" = self.email,
-            "password" = self.password,
-            "status" = self.status,
-            "fecha_registro" = self.fecha_registro,
-            "empresa_id" = self.empresa_id,
+            "id" : self.id,
+            "nombre" : self.nombre,
+            "apellido" : self.apellido,
+            "codigo" : self.codigo,
+            "rut" : self.rut,
+            "rol" : self.rol,
+            "email" : self.email,
+            "password" : self.password,
+            "status" : self.status,
+            "fecha_registro" : self.fecha_registro,
+            "empresa_id" : self.empresa_id,
             
         }
 
@@ -78,20 +78,20 @@ class Entrada_Inventario(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable = False)
     factura_compra_id = db.Column(db.Integer, db.ForeignKey("facturas_compras.id"), nullable = False)
     producto_id = db.Column(db.Integer, db.ForeignKey("productos.id"), nullable = False)
-    facturaC = db.relationship("Factura_Compra", backref= "entradas", lazy = True)
-    producto = db.relationship("Producto", backref = "entradas", lazy = True)
+    """ facturaC = db.relationship("Factura_Compra", backref= "entradas", lazy = True)
+    producto = db.relationship("Producto", backref = "entradas", lazy = True) """
 
 
     def serialize(self):
         return{
-            "id" = self.id,
-            "cantidad" = self.cantidad,
-            "precio_costo_unitario" = self.precio_costo_unitario,
-            "costo_total" = self.costo_total,
-            "fecha_registro" = self.fecha_registro,
-            "usuario_id" = self.usuario_id,
-            "factura_compra_id" = self.factura_compra_id,
-            "producto_id" = self.producto_id
+            "id" : self.id,
+            "cantidad" : self.cantidad,
+            "precio_costo_unitario" : self.precio_costo_unitario,
+            "costo_total" : self.costo_total,
+            "fecha_registro" : self.fecha_registro,
+            "usuario_id" : self.usuario_id,
+            "factura_compra_id" : self.factura_compra_id,
+            "producto_id" : self.producto_id
         }
 
     def save(self):
@@ -111,20 +111,20 @@ class Salida_Inventario(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable = False)
     producto_id = db.Column(db.Integer, db.ForeignKey("productos.id"), nullable = False)
     documento_venta_id = db.Column(db.Integer, db.ForeignKey("documentos_ventas.id"), nullable = False)
-    documentoV = db.relationship("Documento_Venta", backref = "salidas", lazy = True)
-    producto = db.relationship("Producto", backref = "salidas", lazy = True)
+    """  documentoV = db.relationship("Documento_Venta", backref = "salidas", lazy = True)
+    producto = db.relationship("Producto", backref = "salidas", lazy = True) """
 
 
     def serialize(self):
         return {
-            "id" = self.id,
-            "cantidad" = self.cantidad,
-            "precio_costo_unitario" = self.precio_costo_unitario,
-            "costo_total" = self.costo_total,
-            "fecha_registro" = self.fecha_registro,
-            "usuario_id" = self.usuario_id,
-            "producto_id" = self.producto_id,
-            "documento_venta_id" = self.documento_venta_id
+            "id" : self.id,
+            "cantidad" : self.cantidad,
+            "precio_costo_unitario" : self.precio_costo_unitario,
+            "costo_total" : self.costo_total,
+            "fecha_registro" : self.fecha_registro,
+            "usuario_id" : self.usuario_id,
+            "producto_id" : self.producto_id,
+            "documento_venta_id" : self.documento_venta_id
         }
 
     def save(self):
@@ -145,8 +145,8 @@ class Factura_Compra(db.Model):
     monto_otros_impuestos = db.Column(db.Float, nullable = False)
     monto_total = db.Column(db.Float, nullable = False)
     proveedor_id = db.Column(db.Integer, db.ForeignKey("proveedores.id"), nullable = False)
-    entradaI = db.relationship("Entrada_Inventario", backref = "factura" , lazy = True, uselist= False)
-    proveedor = db.relationship("Proveedor", backref = "facturas", lazy = True)
+    """ entradaI = db.relationship("Entrada_Inventario", backref = "factura" , lazy = True, uselist= False)
+    proveedor = db.relationship("Proveedor", backref = "facturas", lazy = True) """
 
     def serialize(self):
         return {
@@ -178,9 +178,9 @@ class Producto(db.Model):
     categoria_id = db.Column(db.Integer, db.ForeignKey("categorias.id"), nullable = False)
     precio_venta_unitario = db.Column(db.Float, nullable = True)
     margen_contribucion = db.Column(db.Float, nullable = True)
-    entradaI = db.relationship("Entrada_Inventario", backref = "producto", lazy = True, uselist= False)
+    """ entradaI = db.relationship("Entrada_Inventario", backref = "producto", lazy = True, uselist= False)
     salidaI = db.relationship("Salida_Inventario", backref = "producto", lazy = True, uselist = False)
-    categoria = db.relationship("Categoria", backref = "producto", lazy = True)
+    categoria = db.relationship("Categoria", backref = "producto", lazy = True) """
     
     def serialize(self):
         return {
@@ -212,7 +212,7 @@ class Documento_Venta(db.Model):
     monto_otros_impuestos = db.Column(db.Float, nullable = False)
     monto_total = db.Column(db.Float, nullable = False)
     forma_pago = db.Column(db.String(100), nullable = False)
-    salidaI = db.relationship("Salida_Inventario", backref = "documentoV", lazy = True, uselist = False)
+    """ salidaI = db.relationship("Salida_Inventario", backref = "documentoV", lazy = True, uselist = False) """
 
     def serialize(self):
         return {
@@ -244,7 +244,7 @@ class Proveedor(db.Model):
     direccion = db.Column(db.String(100), nullable = False)
     cuenta_corriente = db.Column(db.String(100), nullable = True)
     banco = db.Column(db.String(100), nullable = True)
-    facturaC = db.relationship("Factura_Compra", backref = "proveedor", lazy = True, uselist = False)
+    """ facturaC = db.relationship("Factura_Compra", backref = "proveedor", lazy = True, uselist = False) """
 
     def serialize(self):
         return {
@@ -269,7 +269,7 @@ class Categoria(db.Model):
     __tablename__ = "categorias"
     id = db.Column(db.Integer, primary_key = True)
     nombre = db.Column(db.String(100), nullable = False, unique = True)
-    productos = db.relationship("Producto", backref = "categoria", lazy = True)
+    """ productos = db.relationship("Producto", backref = "categoria", lazy = True) """
 
     def serialize(self):
         return {
