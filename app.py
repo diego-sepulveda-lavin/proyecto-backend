@@ -4,7 +4,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
-from models import db, Empresa, Usuario
+from models import db, Empresa, Usuario, Proveedor
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
@@ -54,7 +54,7 @@ def login():
         return jsonify({"msg": "Password no puede estar vacío"}),400
 
     userR = Usuario.query.filter_by(rut = rut).first()
-    if not user:
+    if not userR:
         return jsonify({"msg":"Rut o contraseña inválido."}),401
     if not bcrypt.check_password_hash(userR.password, password):
         return jsonify({"msg":"Rut o contraseña inválido."}), 401
@@ -69,7 +69,34 @@ def login():
     
     return jsonify(data), 200
 
+@app.route("/api/proveedores", methods = ['GET', 'POST'])
+def proveedores():
+    if request.method == 'GET':
+        proveedores = Proveedor.query.all()
+        proveedores = list(map(lambda proveedor: proveedor.serialize(), proveedores))
+        return jsonify(proveedores), 200
 
+    if request.method == 'POST':
+        nombre = request.json.get("nombre",None)
+        rut = request.json.get("rut",None)
+        razon_social = request.json.get("razon_social",None)
+        rubro = request.json.get("rubro",None)
+        direccion = request.json.get("direccion",None)
+        cuenta_corriente = request.json.get("cuenta_corriente",None)
+        banco = request.json.get("banco",None)
+
+        if not nombre:
+            return jsonify({"msg": "Nombre no puede estar vacío"}), 400
+        if not rut:
+            return jsonify({"msg": "Rut no puede estar vacío"}), 400
+        if not razon_social:
+            return jsonify({"msg": "Razon Social no puede estar vacío"}), 400
+        if not rubro:
+            return jsonify({"msg": "Rubro no puede estar vacío"}), 400
+        if not direccion:
+            return jsonify({"msg": "Dirección no puede estar vacío"}), 400
+        
+        return jsonify({"msg":"ok"}),200
 
 if __name__ == "__main__":
     manager.run()
