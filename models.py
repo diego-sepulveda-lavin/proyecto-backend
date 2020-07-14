@@ -147,6 +147,19 @@ class Documento_Venta(db.Model):
     forma_pago = db.Column(db.String(100), nullable = False)
     salidaI = db.relationship("Salida_Inventario", backref = "documentoV", lazy = True, uselist = False)
 
+    def serialize(self):
+        return {
+            "id" : self.id,
+            "tipo_documento":self.tipo_documento,
+            "numero_documento":self.numero_documento,
+            "fecha_emision":self.fecha_emision,
+            "monto_neto":self.monto_neto,
+            "monto_iva":self.monto_iva,
+            "monto_otros_impuestos":self.monto_otros_impuestos,
+            "monto_total":self.monto_total,
+            "forma_pago":self.forma_pago
+        }
+
     def save(self):
         pass
     def update(self):
@@ -166,6 +179,18 @@ class Proveedor(db.Model):
     banco = db.Column(db.String(100), nullable = True)
     facturaC = db.relationship("Factura_Compra", backref = "proveedor", lazy = True, uselist = False)
 
+    def serialize(self):
+        return {
+            "id" : self.id,
+            "nombre" : self.nombre,
+            "rut" : self.rut,
+            "razon_social" : self.razon_social,
+            "rubro" : self.rubro,
+            "direccion": self.direccion,
+            "cuenta_corriente": self.cuenta_corriente,
+            "banco" : self.banco
+        }
+        
     def save(self):
         pass
     def update(self):
