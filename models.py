@@ -24,7 +24,7 @@ class Empresa(db.Model):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Usuario(db.Model):
@@ -45,11 +45,27 @@ class Usuario(db.Model):
     cuadres_usuario = db.relationship('Cuadratura_Caja', backref = 'usuario', lazy = True)
     cuadres_admin = db.relationship('Cuadratura_Caja', backref = 'admin', lazy = True)
 
+    def serialize(self):
+        return {
+            "id" = self.id,
+            "nombre" = self.nombre,
+            "apellido" = self.apellido,
+            "codigo" = self.codigo,
+            "rut" = self.rut,
+            "rol" = self.rol,
+            "email" = self.email,
+            "password" = self.password,
+            "status" = self.status,
+            "fecha_registro" = self.fecha_registro,
+            "empresa_id" = self.empresa_id,
+            
+        }
+
     def save(self):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Entrada_Inventario(db.Model):
@@ -65,11 +81,24 @@ class Entrada_Inventario(db.Model):
     facturaC = db.relationship("Factura_Compra", backref= "entradas", lazy = True)
     producto = db.relationship("Producto", backref = "entradas", lazy = True)
 
+
+    def serialize(self):
+        return{
+            "id" = self.id,
+            "cantidad" = self.cantidad,
+            "precio_costo_unitario" = self.precio_costo_unitario,
+            "costo_total" = self.costo_total,
+            "fecha_registro" = self.fecha_registro,
+            "usuario_id" = self.usuario_id,
+            "factura_compra_id" = self.factura_compra_id,
+            "producto_id" = self.producto_id
+        }
+
     def save(self):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Salida_Inventario(db.Model):
@@ -85,11 +114,24 @@ class Salida_Inventario(db.Model):
     documentoV = db.relationship("Documento_Venta", backref = "salidas", lazy = True)
     producto = db.relationship("Producto", backref = "salidas", lazy = True)
 
+
+    def serialize(self):
+        return {
+            "id" = self.id,
+            "cantidad" = self.cantidad,
+            "precio_costo_unitario" = self.precio_costo_unitario,
+            "costo_total" = self.costo_total,
+            "fecha_registro" = self.fecha_registro,
+            "usuario_id" = self.usuario_id,
+            "producto_id" = self.producto_id,
+            "documento_venta_id" = self.documento_venta_id
+        }
+
     def save(self):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Factura_Compra(db.Model):
@@ -123,7 +165,7 @@ class Factura_Compra(db.Model):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Producto(db.Model):
@@ -156,7 +198,7 @@ class Producto(db.Model):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Documento_Venta(db.Model):
@@ -172,11 +214,24 @@ class Documento_Venta(db.Model):
     forma_pago = db.Column(db.String(100), nullable = False)
     salidaI = db.relationship("Salida_Inventario", backref = "documentoV", lazy = True, uselist = False)
 
+    def serialize(self):
+        return {
+            "id" : self.id,
+            "tipo_documento":self.tipo_documento,
+            "numero_documento":self.numero_documento,
+            "fecha_emision":self.fecha_emision,
+            "monto_neto":self.monto_neto,
+            "monto_iva":self.monto_iva,
+            "monto_otros_impuestos":self.monto_otros_impuestos,
+            "monto_total":self.monto_total,
+            "forma_pago":self.forma_pago
+        }
+
     def save(self):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Proveedor(db.Model):
@@ -191,11 +246,23 @@ class Proveedor(db.Model):
     banco = db.Column(db.String(100), nullable = True)
     facturaC = db.relationship("Factura_Compra", backref = "proveedor", lazy = True, uselist = False)
 
+    def serialize(self):
+        return {
+            "id" : self.id,
+            "nombre" : self.nombre,
+            "rut" : self.rut,
+            "razon_social" : self.razon_social,
+            "rubro" : self.rubro,
+            "direccion": self.direccion,
+            "cuenta_corriente": self.cuenta_corriente,
+            "banco" : self.banco
+        }
+        
     def save(self):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Categoria(db.Model):
@@ -204,11 +271,17 @@ class Categoria(db.Model):
     nombre = db.Column(db.String(100), nullable = False, unique = True)
     productos = db.relationship("Producto", backref = "categoria", lazy = True)
 
+    def serialize(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "productos": self.productos
+        }
     def save(self):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Cuadratura_Caja(db.Model):
@@ -224,11 +297,26 @@ class Cuadratura_Caja(db.Model):
     monto_tarjeta = db.Column(db.Float, nullable = False)
     monto_cierre = db.Column(db.Float, nullable = False)
     diferencia_en_caja = db.Column(db.Float, nullable = False)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "usuario_id": self.usuario_id,
+            "admin_id": self.admin_id,
+            "fecha_apertura": self.fecha_apertura,
+            "fecha_cierre": self.fecha_cierre,
+            "monto_apertura": self.monto_apertura,
+            "monto_transferencia": self.monto_transferencia,
+            "monto_efectivo": self.monto_efectivo,
+            "monto_tarjeta": self.monto_tarjeta,
+            "monto_cierre": self.monto_cierre,
+            "diferencia_en_caja": self.diferencia_en_caja
+        }
     
     def save(self):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
