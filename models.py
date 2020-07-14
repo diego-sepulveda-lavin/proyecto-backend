@@ -24,7 +24,7 @@ class Empresa(db.Model):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Usuario(db.Model):
@@ -49,7 +49,7 @@ class Usuario(db.Model):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Entrada_Inventario(db.Model):
@@ -69,7 +69,7 @@ class Entrada_Inventario(db.Model):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Salida_Inventario(db.Model):
@@ -89,7 +89,7 @@ class Salida_Inventario(db.Model):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Factura_Compra(db.Model):
@@ -110,7 +110,7 @@ class Factura_Compra(db.Model):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Producto(db.Model):
@@ -131,7 +131,7 @@ class Producto(db.Model):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Documento_Venta(db.Model):
@@ -164,7 +164,7 @@ class Documento_Venta(db.Model):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Proveedor(db.Model):
@@ -195,7 +195,7 @@ class Proveedor(db.Model):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Categoria(db.Model):
@@ -204,11 +204,17 @@ class Categoria(db.Model):
     nombre = db.Column(db.String(100), nullable = False, unique = True)
     productos = db.relationship("Producto", backref = "categoria", lazy = True)
 
+    def serialize(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "productos": self.productos
+        }
     def save(self):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
 class Cuadratura_Caja(db.Model):
@@ -224,11 +230,26 @@ class Cuadratura_Caja(db.Model):
     monto_tarjeta = db.Column(db.Float, nullable = False)
     monto_cierre = db.Column(db.Float, nullable = False)
     diferencia_en_caja = db.Column(db.Float, nullable = False)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "usuario_id": self.usuario_id,
+            "admin_id": self.admin_id,
+            "fecha_apertura": self.fecha_apertura,
+            "fecha_cierre": self.fecha_cierre,
+            "monto_apertura": self.monto_apertura,
+            "monto_transferencia": self.monto_transferencia,
+            "monto_efectivo": self.monto_efectivo,
+            "monto_tarjeta": self.monto_tarjeta,
+            "monto_cierre": self.monto_cierre,
+            "diferencia_en_caja": self.diferencia_en_caja
+        }
     
     def save(self):
         pass
     def update(self):
         pass
-    def add(self):
+    def delete(self):
         pass
 
