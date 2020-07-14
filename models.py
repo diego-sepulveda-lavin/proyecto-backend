@@ -9,6 +9,7 @@ class Empresa(db.Model):
     rut = db.Column(db.String(13), nullable = False, unique = True)
     razon_social = db.Column(db.String(100), nullable = False, unique = True)
     rubro = db.Column(db.String(100), nullable = False)
+    usuarios = db.relationship('Usuario', backref = 'empresa',lazy = True)
 
     def serialize(self):
         return {
@@ -32,6 +33,11 @@ class Usuario(db.Model):
     status = db.Column(db.Boolean, default = True, nullable = False)
     fecha_registro = db.Column(db.DateTime, nullable = False, default = datetime.now) #hora local
     empresa_id = db.Column(db.Integer, db.ForeignKey("empresas.id"), nullable = False)
+    entradas = db.relationship('Entrada_Inventario', backref = 'usuario', lazy = True)
+    salidas = db.relationship('Salida_Inventario', backref = 'usuario', lazy = True)
+    cuadres_usuario = db.relationship('Cuadratura_Caja', backref = 'usuario', lazy = True)
+    cuadres_admin = db.relationship('Cuadratura_Caja', backref = 'admin', lazy = True)
+
 
 class Entrada_Inventario(db.Model):
     __tablename__ = "entradas_inventario"
