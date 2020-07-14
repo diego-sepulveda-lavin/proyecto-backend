@@ -106,6 +106,19 @@ class Factura_Compra(db.Model):
     entradaI = db.relationship("Entrada_Inventario", backref = "factura" , lazy = True, uselist= False)
     proveedor = db.relationship("Proveedor", backref = "facturas", lazy = True)
 
+    def serialize(self):
+        return {
+            "id" : self.id,
+            "folio" : self.folio,
+            "fecha_emision" : self.fecha_emision,
+            "fecha_recepcion" : self.fecha_recepcion,
+            "monto_neto" : self.monto_neto,
+            "monto_iva" : self.monto_iva,
+            "monto_otros_impuestos" : self.monto_otros_impuestos,
+            "monto_total" : self.monto_total,
+            "proveedor_id" : self.proveedor_id,
+        }
+
     def save(self):
         pass
     def update(self):
@@ -127,6 +140,18 @@ class Producto(db.Model):
     salidaI = db.relationship("Salida_Inventario", backref = "producto", lazy = True, uselist = False)
     categoria = db.relationship("Categoria", backref = "producto", lazy = True)
     
+    def serialize(self):
+        return {
+            "id" : self.id,
+            "sku" : self.sku,
+            "descripcion" : self.descripcion,
+            "codigo_barra" : self.codigo_barra,
+            "unidad_entrega" : self.unidad_entrega,
+            "categoria_id" : self.categoria_id,
+            "precio_venta_unitario" : self.precio_venta_unitario,
+            "margen_contribucion" : self.margen_contribucion,
+        }
+
     def save(self):
         pass
     def update(self):
