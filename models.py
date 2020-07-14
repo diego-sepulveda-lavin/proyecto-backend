@@ -45,6 +45,22 @@ class Usuario(db.Model):
     cuadres_usuario = db.relationship('Cuadratura_Caja', backref = 'usuario', lazy = True)
     cuadres_admin = db.relationship('Cuadratura_Caja', backref = 'admin', lazy = True)
 
+    def serialize(self):
+        return {
+            "id" = self.id,
+            "nombre" = self.nombre,
+            "apellido" = self.apellido,
+            "codigo" = self.codigo,
+            "rut" = self.rut,
+            "rol" = self.rol,
+            "email" = self.email,
+            "password" = self.password,
+            "status" = self.status,
+            "fecha_registro" = self.fecha_registro,
+            "empresa_id" = self.empresa_id,
+            
+        }
+
     def save(self):
         pass
     def update(self):
@@ -65,6 +81,19 @@ class Entrada_Inventario(db.Model):
     facturaC = db.relationship("Factura_Compra", backref= "entradas", lazy = True)
     producto = db.relationship("Producto", backref = "entradas", lazy = True)
 
+
+    def serialize(self):
+        return{
+            "id" = self.id,
+            "cantidad" = self.cantidad,
+            "precio_costo_unitario" = self.precio_costo_unitario,
+            "costo_total" = self.costo_total,
+            "fecha_registro" = self.fecha_registro,
+            "usuario_id" = self.usuario_id,
+            "factura_compra_id" = self.factura_compra_id,
+            "producto_id" = self.producto_id
+        }
+
     def save(self):
         pass
     def update(self):
@@ -84,6 +113,19 @@ class Salida_Inventario(db.Model):
     documento_venta_id = db.Column(db.Integer, db.ForeignKey("documentos_ventas.id"), nullable = False)
     documentoV = db.relationship("Documento_Venta", backref = "salidas", lazy = True)
     producto = db.relationship("Producto", backref = "salidas", lazy = True)
+
+
+    def serialize(self):
+        return {
+            "id" = self.id,
+            "cantidad" = self.cantidad,
+            "precio_costo_unitario" = self.precio_costo_unitario,
+            "costo_total" = self.costo_total,
+            "fecha_registro" = self.fecha_registro,
+            "usuario_id" = self.usuario_id,
+            "producto_id" = self.producto_id,
+            "documento_venta_id" = self.documento_venta_id
+        }
 
     def save(self):
         pass
