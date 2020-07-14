@@ -35,13 +35,107 @@ def my_expired_token_callback(expired_token):
 def home():
     return 'Hola mundo'
 
-@app.route('/api/empresas', methods = ['GET'])
-def empresas():
+@app.route('/api/empresas', methods = ['GET', "POST"])
+@app.route('/api/empresas/<int:id>', methods = ['GET', "PUT","DELETE"])
+#@jwt_required
+def empresas(id=None):
+    ### Ver Empresas ###
     if request.method == 'GET':
-        empresas = Empresa.query.all()
-        empresas = list(map(lambda empresa: empresa.serialize(),empresas))
-        print(empresas)
-        return jsonify(empresas),200
+        if not id:
+            empresas = Empresa.query.all()
+            empresas = list(map(lambda empresa: empresa.serialize(),empresas))
+            print(empresas)
+            return jsonify(empresas),200
+
+    ### Ver Empresa por ID ###
+        empresa = Empresa.query.get(id)
+        if empresa:
+            return jsonify(empresa.serialize()),200
+        return jsonify({"msg": "Empresa no se encuentra en el sistema"}),400
+
+    ### Eliminar Empresa por ID ###
+    if request.method == "DELETE":
+        if id:
+            empresa= Empresa.query.get(id)
+            if empresa:
+                empresa.delete()
+                return jsonify({"msg": f"Empresa <{empresa.nombre}> eliminada exitosamente!"}),200
+            else:
+                return jsonify({"msg": "Empresa no se encuentra en el sistema"}),400
+
+    ### Ingresar Empresa ###
+    if request.method == "POST":
+        nombre = request.json.get("nombre", None)
+        rut = request.json.get("rut", None)
+        razon_social = request.json.get("razon_social", None)
+        rubro = request.json.get("rubro", None)
+
+        if not nombre:
+            return jsonify({"msg": "Nombre de empresa no puede estar vacío"}),400
+        if not rut:
+            return jsonify({"msg": "Rut de empresa no puede estar vacío"}),400
+        if not razon_social:
+            return jsonify({"msg": "Razon Social de empresa no puede estar vacío"}),400
+        if not rubro:
+            return jsonify({"msg": "Rubro de empresa no puede estar vacío"}),400
+        
+        validaRutExistente = Empresa.query.filter_by(rut = rut).first()
+        if validaRutExistente:
+            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}),401
+
+        validaRazonSocialExistente = Empresa.query.filter_by(razon_social = razon_social).first()
+        if validaRazonSocialExistente:
+            return jsonify({"msg": "Razon social de empresa ya se encuentra registrado"}),401
+
+        empresa = Empresa()
+        empresa.nombre = nombre
+        empresa.rut = rut
+        empresa.razon_social = razon_social
+        empresa.rubro = rubro
+        empresa.save()
+
+        return jsonify(empresa.serialize()),200
+    ### Actualizar Empresa by ID ###
+    if request.method == "PUT":
+        if id:
+            nombre = request.json.get("nombre", None)
+            rut = request.json.get("rut", None)
+            razon_social = request.json.get("razon_social", None)
+            rubro = request.json.get("rubro", None)
+
+            if not nombre:
+                return jsonify({"msg": "Nombre de empresa no puede estar vacío"}),400
+            if not rut:
+                return jsonify({"msg": "Rut de empresa no puede estar vacío"}),400
+            if not razon_social:
+                return jsonify({"msg": "Razon Social de empresa no puede estar vacío"}),400
+            if not rubro:
+                return jsonify({"msg": "Rubro de empresa no puede estar vacío"}),400
+            
+            empresaActualizar = Empresa.query.get(id)
+            if not empresaActualizar:
+                return jsonify({"msg": "Empresa no se encuentra en el sistema"}),401
+
+            rutOcupado = Empresa.query.filter_by(rut = rut).first()
+            if rutOcupado and empresaActualizar.rut==rut:
+                return jsonify({"msg": "Rut ya se encuentra registrado."}),401
+            razonSocialOcupado = Empresa.query.filter_by(razon_social = razon_social).first()
+            if razonSocialOcupado and empresaActualizar.razon_social == razon_social:
+                return jsonify({"msg" : "Razon social ya se encuentra registrada."})
+
+            empresaActualizar.nombre = nombre
+            empresaActualizar.rut = rut
+            empresaActualizar.razon_social = razon_social
+            empresaActualizar.rubro = rubro
+
+            empresaActualizar.update()
+            data = {
+                "msg": "Empresa Modificada",
+                "user": empresaActualizar.serialize()
+            }
+            return jsonify(data),200
+
+    
 
 @app.route("/api/login/", methods = ["POST"])
 def login():
@@ -54,7 +148,7 @@ def login():
         return jsonify({"msg": "Password no puede estar vacío"}),400
 
     userR = Usuario.query.filter_by(rut = rut).first()
-    if not user:
+    if not userR:
         return jsonify({"msg":"Rut o contraseña inválido."}),401
     if not bcrypt.check_password_hash(userR.password, password):
         return jsonify({"msg":"Rut o contraseña inválido."}), 401
@@ -66,7 +160,7 @@ def login():
         "access_token": access_token,
         "user": userR.serialize()
     }
-    
+
     return jsonify(data), 200
 
 @app.route('/api/productos', methods = ['GET'])

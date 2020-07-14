@@ -21,11 +21,13 @@ class Empresa(db.Model):
         }
 
     def save(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
     def update(self):
-        pass
+        db.session.commit()
     def delete(self):
-        pass
+        db.session.delete(self)
+        db.session.commit()
 
 class Usuario(db.Model):
     __tablename__ = "usuarios"
