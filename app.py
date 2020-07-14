@@ -266,8 +266,8 @@ def usuarios(id = None):
                     return jsonify({"msg": "Password no puede ir vacío."})
                 usuario_actualizar.password = password
             if status is not None:
-                if not status:
-                    return jsonify({"msg": "Status no puede ir vacío"})
+                if status != False and status != True:
+                    return jsonify("Status debe ser true o false")
                 usuario_actualizar.status = status
             
             usuario_actualizar.update()
