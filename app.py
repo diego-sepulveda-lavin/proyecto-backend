@@ -4,7 +4,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
-from models import db, Empresa, Usuario
+from models import db, Empresa, Usuario, Producto
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
@@ -69,7 +69,55 @@ def login():
     
     return jsonify(data), 200
 
+@app.route('/api/productos', methods = ['GET'])
+@app.route("/api/productos/<nombre_producto>", methods=["GET", "POST", "PUT", "DELETE"])
+def productos(nombre_producto = None):
+    if request.method == 'GET':
+        if nombre_producto is None:
+            productos = Producto.query.all()
+            if productos:
+                productos = list(map(lambda producto: producto.serialize(),productos))
+                return jsonify(productos),200
+            else:
+                return jsonify({"msg" : "No hay datos de productos"}),400
+        if nombre_producto is not None:
+            producto = Producto.query.filter(Producto.descripcion.ilike(f"%{nombre_producto}")).first()
+            if producto:
+                return jsonify(producto.serialize()),200
+            else:
+                return jsonify({"msg" : "Producto no encontrado"})
+    if request.method == 'POST':
+        data = request.get_json()
+        if data["sku"]=="" or data["sku"] == None:
+            return jsonify({"msg" : "SKU del producto nuevo no puede estar vacio"})
+        
+        if data["descripcion"]=="" or data["descripcion"] == None:
+            return jsonify({"msg" : "Descripcion del producto nuevo no puede estar vacio"})
+        
+        if data["codigo_barra"]=="" or data["codigo_barra"] == None:
+            return jsonify({"msg" : "Codigo de Barra del producto nuevo no puede estar vacio"})
+        
+        if data["unidad_entrega"]=="" or data["unidad_entrega"] == None:
+            return jsonify({"msg" : "Unidad de Entrega del producto nuevo no puede estar vacio"})
+        
+        if not data["categoria_id"]:
+            return jsonify({"msg" : "Categoría del producto nuevo no puede estar vacio"})
 
+        producto = Producto.query.filter_by(descripcion = data["descripcion"]).first()
+        if producto:
+            return jsonify({"msg" : "Producto ya existe"})
+        
+        producto = Producto()
+        producto.sku = data["sku"]
+        producto.descripcion = data["descripcion"]
+        producto.codigo_barra = data["codigo_barra"]
+        producto.unidad_entrega = data["unidad_entrega"]
+        producto.categoria_id = data["categoria_id"]
+
+        db.session.add(producto)
+        db.session.commit()
+
+        return jsonify({"msg": "Producto creado exitosamente"}), 201
 
 if __name__ == "__main__":
     manager.run()
