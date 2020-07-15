@@ -169,11 +169,13 @@ class Factura_Compra(db.Model):
         }
 
     def save(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
     def update(self):
-        pass
+        db.session.commit()
     def delete(self):
-        pass
+        db.session.delete(self)
+        db.session.commit()
 
 class Producto(db.Model):
     __tablename__ = "productos"

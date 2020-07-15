@@ -1,10 +1,11 @@
+from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
-from models import db, Empresa, Usuario, Producto, Categoria, Proveedor
+from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura_Compra
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
@@ -101,14 +102,10 @@ def empresas(id=None):
             if not empresaActualizar:
                 return jsonify({"msg": "Empresa no se encuentra en el sistema"}),401
 
-
             nombre = request.json.get("nombre", None)
             rut = request.json.get("rut", None)
             razon_social = request.json.get("razon_social", None)
             rubro = request.json.get("rubro", None)
-
-           
-            
 
             rutOcupado = Empresa.query.filter_by(rut = rut).first()
             if rutOcupado and rut is not None:
@@ -277,12 +274,6 @@ def usuarios(id = None):
             }
             return jsonify(data),200
             
-        
-
-
-        
-
-
 @app.route("/api/login/", methods = ["POST"])
 def login():
     rut = request.json.get("rut", None)
@@ -362,10 +353,6 @@ def categorias(id = None):
             data = {"msg": "Empresa Modificada", "user": categoria_update.serialize()}
             return jsonify(data),200
 
-
-@app.route('/api/productos', methods = ['GET'])
-@app.route("/api/productos/<nombre_producto>", methods=["GET", "POST", "PUT", "DELETE"])
-def productos(nombre_producto = None):
 @app.route("/api/proveedores", methods = ['GET', 'POST'])
 @app.route("/api/proveedores/<int:id>", methods = ['GET', 'PUT', 'DELETE'])
 def proveedores(id = None):
@@ -476,6 +463,7 @@ def proveedores(id = None):
 @app.route('/api/productos', methods = ['GET', "POST"])
 @app.route("/api/productos/<int:id>", methods=["GET", "PUT", "DELETE"])
 def productos(id=None):
+    # Devuelve listado de todos los productos
     if request.method == 'GET':
         if id is None:
             productos = Producto.query.all()
@@ -491,6 +479,7 @@ def productos(id=None):
             else:
                 return jsonify({"msg" : "Producto no encontrado"}), 400
 
+    # Creación de un nuevo producto
     if request.method == 'POST':
         data = request.get_json()
         if not data["sku"]:
@@ -522,6 +511,7 @@ def productos(id=None):
        
         return jsonify({"msg": "Producto creado exitosamente"}), 201
 
+    # Actualización de un producto
     if request.method == 'PUT':
         producto = Producto.query.get(id)
         if not producto:
@@ -537,6 +527,7 @@ def productos(id=None):
 
             return jsonify({"msg": "Producto actualizado exitosamente"}), 201
 
+    # Elimina un producto
     if request.method == 'DELETE':
         producto = Producto.query.get(id)
         if producto:
@@ -544,6 +535,70 @@ def productos(id=None):
         else:
             return jsonify({"msg" : "Producto no encontrado"}), 200
             producto.delete()
+
+@app.route('/api/facturas-compras', methods = ['GET', "POST"])
+@app.route("/api/facturas-compras/<int:id>", methods=["GET"])
+def facturas_compras(id=None):
+
+    # Devuelve todas las facturas registradas
+    if request.method == 'GET':
+        if id is None:
+            facturas_compras = Factura_Compra.query.all()
+            if facturas_compras:
+                facturas_compras = list(map(lambda factura_compra: factura_compra.serialize(),facturas_compras))
+                return jsonify(facturas_compras), 200
+            else:
+                return jsonify({"msg" : "No hay datos de facturas"}), 400
+        if id is not None:
+            facturas_compras = Factura_Compra.query.get(id)
+            if facturas_compras:
+                return jsonify(factura_compra.serialize()), 200
+            else:
+                return jsonify({"msg" : "Factura no encontrada"}), 400
+
+    # Ingreso de nueva factura
+    if request.method == 'POST':
+        data = request.get_json()
+        if not data["folio"]:
+            return jsonify({"msg" : "Folio de nueva factura no puede estar vacio"})
+        
+        if not data["fecha_emision"]:
+            return jsonify({"msg" : "Fecha de emisión de nueva factura no puede estar vacio"})
+        
+        if not data["fecha_recepcion"]:
+            return jsonify({"msg" : "Fecha de recepción de nueva factura no puede estar vacio"})
+        
+        if not data["monto_neto"]:
+            return jsonify({"msg" : "Monto Neto de nueva factura no puede estar vacio"})
+        
+        if not data["monto_iva"]:
+            return jsonify({"msg" : "Monto IVA de nueva factura no puede estar vacio"})
+        
+        if not data["monto_otros_impuestos"] >=0:
+            return jsonify({"msg" : "Monto de otros Impuestos de nueva factura no puede estar vacio"})
+        
+        if not data["monto_total"]:
+            return jsonify({"msg" : "Monto Total de nueva factura no puede estar vacio"})
+        
+        if not data["proveedor_id"]:
+            return jsonify({"msg" : "Id proveedor no puede estar vacio"})
+
+        factura_compra = Factura_Compra.query.get(id) # Se debe verificar forma de no repetir ingreso de factura
+        if factura_compra:
+            return jsonify({"msg" : "Factura ya existe"})
+
+        factura_compra = Factura_Compra()
+        factura_compra.folio = data["folio"]
+        factura_compra.fecha_emision = datetime.strptime(data["fecha_emision"], '%Y-%m-%d %H:%M:%S') 
+        factura_compra.fecha_recepcion = datetime.strptime(data["fecha_recepcion"], '%Y-%m-%d %H:%M:%S') 
+        factura_compra.monto_neto = data["monto_neto"]
+        factura_compra.monto_iva = data["monto_iva"]
+        factura_compra.monto_otros_impuestos = data["monto_otros_impuestos"]
+        factura_compra.monto_total = data["monto_total"]
+        factura_compra.proveedor_id = data["proveedor_id"]
+        factura_compra.save()
+       
+        return jsonify({"msg": "Factura ingresada exitosamente"}), 201
 
 if __name__ == "__main__":
     manager.run()
