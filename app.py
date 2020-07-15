@@ -305,8 +305,8 @@ def usuarios(id = None):
             return jsonify(data),200
  
 
-@app.route("/api/entrada-inventario", methods =["GET", "POST"])
-@app.route("/api/entrada-inventario/<int:id>", methods=["GET", "PUT"])
+@app.route("/api/entradas-inventario", methods =["GET", "POST"])
+@app.route("/api/entradas-inventario/<int:id>", methods=["GET", "PUT"])
 def entrada_inventario(id = None):
     ### VER TODAS LAS ENTRADAS DE INVENTARIO ###
     if request.method =="GET":        
@@ -396,12 +396,6 @@ def salidas_inventario(id=None):
         if not data["precio_costo_unitario"]:
             return jsonify({"msg" : "Precio Costo Unitario del producto no puede estar vacio"})
         
-        if not data["costo_total"]:
-            return jsonify({"msg" : "Costo Total del producto no puede estar vacio"})
-        
-        if not data["fecha_registro"]:
-            return jsonify({"msg" : "Fecha de registro no puede estar vacia"})
-        
         if not data["usuario_id"]:
             return jsonify({"msg" : "Usuario Id no puede estar vacio"})
         
@@ -414,8 +408,7 @@ def salidas_inventario(id=None):
         salida_inventario = Salida_Inventario()
         salida_inventario.cantidad = data["cantidad"]
         salida_inventario.precio_costo_unitario = data["precio_costo_unitario"]
-        salida_inventario.costo_total = data["costo_total"]
-        salida_inventario.fecha_registro = data["fecha_registro"]
+        salida_inventario.costo_total = salida_inventario.genera_costo_total() #MULTIPLICACION DE CANTIDAD POR COSTO
         salida_inventario.usuario_id = data["usuario_id"] #revisar porque es una FK
         salida_inventario.producto_id = data["producto_id"] #revisar porque es una FK
         salida_inventario.documento_venta_id = data["documento_venta_id"] #revisar porque es una FK
@@ -491,8 +484,8 @@ def facturas_compras(id=None):
         
         factura_compra = Factura_Compra()
         factura_compra.folio = data["folio"]
-        factura_compra.fecha_emision = datetime.strptime(data["fecha_emision"], '%Y-%m-%d %H:%M:%S') 
-        factura_compra.fecha_recepcion = datetime.strptime(data["fecha_recepcion"], '%Y-%m-%d %H:%M:%S') 
+        factura_compra.fecha_emision = datetime.strptime(data["fecha_emision"], '%Y-%m-%d') 
+        factura_compra.fecha_recepcion = datetime.strptime(data["fecha_recepcion"], '%Y-%m-%d') 
         factura_compra.monto_neto = data["monto_neto"]
         factura_compra.monto_iva = data["monto_iva"]
         factura_compra.monto_otros_impuestos = data["monto_otros_impuestos"]
