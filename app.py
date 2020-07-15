@@ -362,37 +362,7 @@ def entrada_inventario(id = None):
         entrada_actualizar.update() 
         return jsonify({"msg": "Producto modificado."}),200      
 
-            
-
-@app.route("/api/login/", methods = ["POST"])
-def login():
-    rut = request.json.get("rut", None)
-    password = request.json.get("password", None)
-
-    if not rut:
-        return jsonify({"msg": "Rut no puede estar vacío"}),400
-    if not password:
-        return jsonify({"msg": "Password no puede estar vacío"}),400
-
-    userR = Usuario.query.filter_by(rut = rut).first()
-    if not userR:
-        return jsonify({"msg":"Rut o contraseña inválido."}),401
-    if not bcrypt.check_password_hash(userR.password, password):
-        return jsonify({"msg":"Rut o contraseña inválido."}), 401
-
-    expires = datetime.timedelta(hour=24)
-    access_token = create_access_token(identity=userR.rut, expires_delta=expires)
-
-    data = {
-        "access_token": access_token,
-        "user": userR.serialize()
-    }
-
-    return jsonify(data), 200
-
-@app.route('/api/categorias', methods=['GET', "POST"])
-@app.route('/api/categoria/<int:id>', methods=["GET", "PUT"])
-       
+                  
 @app.route('/api/categoria', methods=['GET'])
 @app.route('/api/categoria/<int:id>', methods=["GET", "POST", "PUT", "DELETE"])
 def categorias(id = None):
@@ -723,7 +693,6 @@ def cuadratura_caja(id = None):
 @app.route('/api/facturas-compras', methods = ['GET', "POST"])
 @app.route("/api/facturas-compras/<int:id>", methods=["GET"])
 def facturas_compras(id=None):
-
     # Devuelve todas las facturas registradas
     if request.method == 'GET':
         if id is None:
