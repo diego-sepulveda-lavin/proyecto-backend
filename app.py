@@ -4,7 +4,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
-from models import db, Empresa, Usuario, Producto
+from models import db, Empresa, Usuario, Producto, Categoria
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
@@ -135,7 +135,7 @@ def empresas(id=None):
             }
             return jsonify(data),200
 
-    
+
 
 @app.route("/api/login/", methods = ["POST"])
 def login():
@@ -162,6 +162,60 @@ def login():
     }
 
     return jsonify(data), 200
+
+@app.route('/api/categoria', methods=['GET'])
+@app.route('/api/categoria/<int:id>', methods=["GET", "POST", "PUT", "DELETE"])
+def categorias(id = None):
+    if request.method == 'GET':
+        if not id:
+            categorias = Categoria.query.all()
+            if categorias:
+                categorias = list(map(lambda categoria: categoria.serialize(), categorias))
+                return jsonify (categorias),200
+            return jsonify({"msg": "Categoria no existente"}),400
+        categoria = Categoria.query.get(id)
+        if categoria:
+            return (categoria.serialize()),200
+        return jsonify({"msg": "categoria no encontrada"}),400 
+    
+    if request.method == 'POST':
+        nombre = request.json.get("nombre", None)
+        if not nombre:
+            return jsonify({"msg": "por favor ingresar nombre de categoria valido"})
+        name_overlapped = Categoria.query.filter_by(nombre = nombre).first()
+        if name_overlapped:
+            return jsonify({"msg": "Categoria ya existe"})
+
+    if request.method == 'DELETE':
+        if id:
+            categoria= Categoria.query.get(id)
+            if Categoria:
+                categoria.delete()
+                return jsonify({"msg": f"Categoria {empresa.nombre} eliminada"}),200
+            else:
+                return jsonify({"msg": "categoria no encontrada"}),400 
+            categoria = Categoria()
+            categoria.nombre = nombre
+            categoria.save()
+    
+    if request.method == 'PUT':
+        if id:
+            nombre = request.json.get("nombre", None)
+            
+            if not nombre:
+                return jsonify({"msg": "Nombre de empresa no puede estar vacío"}),400
+                        
+            categoria_update = Empresa.query.get(id)
+            if not categoria_update:
+                return jsonify({"msg": "Empresa no se encuentra en el sistema"}),401
+
+           
+            categoria_update.nombre = nombre
+                    
+            categoria_update.update()
+            data = {"msg": "Empresa Modificada", "user": categoria_update.serialize()}
+            return jsonify(data),200
+
 
 @app.route('/api/productos', methods = ['GET'])
 @app.route("/api/productos/<nombre_producto>", methods=["GET", "POST", "PUT", "DELETE"])

@@ -282,11 +282,13 @@ class Categoria(db.Model):
             "productos": self.productos
         }
     def save(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
     def update(self):
-        pass
+        db.session.commit()
     def delete(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
 
 class Cuadratura_Caja(db.Model):
     __tablename__ = "cuadraturas_cajas"
