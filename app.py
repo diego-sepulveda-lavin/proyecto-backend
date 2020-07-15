@@ -5,7 +5,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
-from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura_Compra, Entrada_Inventario, Cuadratura_Caja
+from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura_Compra, Entrada_Inventario, Salida_Inventario, Documento_Venta, Cuadratura_Caja
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
@@ -426,7 +426,7 @@ def proveedores(id = None):
             proveedores = list(map(lambda proveedor: proveedor.serialize(), proveedores))
             return jsonify(proveedores), 200
 
-        # DEVUELVE DETALLE DE EMPRESA POR ID
+        # DEVUELVE DETALLE DE PROVEEDOR POR ID
         if id:
             proveedor = Proveedor.query.get(id)
             if proveedor:
@@ -753,5 +753,140 @@ def facturas_compras(id=None):
        
         return jsonify({"msg": "Factura ingresada exitosamente"}), 201
 
+@app.route('/api/salidas-inventario', methods = ['GET', "POST"])
+@app.route("/api/salidas-inventario/<int:id>", methods=["GET", "PUT"])
+def salidas_inventario(id=None):
+
+    # Devuelve listado de todas las salidas de inventario por ventas
+    if request.method == 'GET':
+        if id is None:
+            salidas_inventario = Salida_Inventario.query.all()
+            if salidas_inventario:
+                salidas_inventario = list(map(lambda salida_inventario: salida_inventario.serialize(),salidas_inventario))
+                return jsonify(salidas_inventario), 200
+            else:
+                return jsonify({"msg" : "No hay registro de ventas"}), 400
+        if id is not None:
+            salida_inventario = Salida_Inventario.query.get(id)
+            if salida_inventario:
+                return jsonify(salida_inventario.serialize()), 200
+            else:
+                return jsonify({"msg" : "Registro de venta no encontrado"}), 400
+
+    # Registro de salida de producto por venta
+    if request.method == 'POST':
+        data = request.get_json()
+        if not data["cantidad"]:
+            return jsonify({"msg" : "Cantidad del producto no puede estar vacia"})
+        
+        if not data["precio_costo_unitario"]:
+            return jsonify({"msg" : "Precio Costo Unitario del producto no puede estar vacio"})
+        
+        if not data["costo_total"]:
+            return jsonify({"msg" : "Costo Total del producto no puede estar vacio"})
+        
+        if not data["fecha_registro"]:
+            return jsonify({"msg" : "Fecha de registro no puede estar vacia"})
+        
+        if not data["usuario_id"]:
+            return jsonify({"msg" : "Usuario Id no puede estar vacio"})
+        
+        if not data["producto_id"]:
+            return jsonify({"msg" : "Producto Id no puede estar vacio"})
+        
+        if not data["documento_venta_id"]:
+            return jsonify({"msg" : "Documento de Venta Id no puede estar vacio"})
+ 
+        salida_inventario = Salida_Inventario()
+        salida_inventario.cantidad = data["cantidad"]
+        salida_inventario.precio_costo_unitario = data["precio_costo_unitario"]
+        salida_inventario.costo_total = data["costo_total"]
+        salida_inventario.fecha_registro = data["fecha_registro"]
+        salida_inventario.usuario_id = data["usuario_id"] #revisar porque es una FK
+        salida_inventario.producto_id = data["producto_id"] #revisar porque es una FK
+        salida_inventario.documento_venta_id = data["documento_venta_id"] #revisar porque es una FK
+        salida_inventario.save()
+       
+        return jsonify({"msg": "Venta efectuada exitosamente"}), 201
+
+    if request.method == 'PUT':
+        salida_inventario = Salida_Inventario.query.get(id)
+        if not salida_inventario:
+            return jsonify({"msg" : "Salidad de inventario no encontrada"}), 400
+        else:
+            valor_cantidad = request.json.get("cantidad", None)
+            
+            salida_inventario.cantidad = valor_cantidad
+            salida_inventario.update()
+
+            return jsonify({"msg": "Salida de inventario modificada exitosamente"}), 201
+@app.route("/api/documentos-venta", methods = ['GET', 'POST'])
+@app.route("/api/documentos-venta/<int:id>", methods = ['GET'])
+def documentos_venta(id = None):
+    if request.method == 'GET':
+        # DEVUELVE LISTADO CON TODOS LOS DOCUMENTOS DE VENTA
+        if not id:
+            documentos_venta = Documento_Venta.query.all()
+            documentos_venta = list(map(lambda documento_venta: documento_venta.serialize(), documentos_venta))
+            return jsonify(documentos_venta), 200
+
+        # DEVUELVE DETALLE DE EMPRESA POR ID
+        if id:
+            documento_venta = Documento_Venta.query.get(id)
+            if documento_venta:
+                return jsonify(documento_venta.serialize()), 200
+            else:
+                return jsonify({"msg": "Documento de venta no se encuentra en el sistema"}), 400
+    
+    # PERMITE CREAR NUEVO DOCUMENTO VENTA
+    if request.method == 'POST':
+
+        tipo_documento = request.json.get("tipo_documento", None)
+        numero_documento = request.json.get("numero_documento", None)
+        fecha_emision = request.json.get("fecha_emision", None)
+        monto_neto = request.json.get("monto_neto", None)
+        monto_iva = request.json.get("monto_iva", None)
+        monto_otros_impuestos = request.json.get("monto_otros_impuestos", None)
+        monto_total = request.json.get("monto_total", None)
+        forma_pago = request.json.get("forma_pago", None)
+
+        if not tipo_documento:
+            return jsonify({"msg": "Tipo de Documento no puede estar vacío"}), 400
+        if not numero_documento:
+            return jsonify({"msg": "Numero de Documento no puede estar vacío"}), 400
+        if not fecha_emision:
+            return jsonify({"msg": "Fecha de Emisión no puede estar vacío"}), 400
+        if not monto_neto:
+            return jsonify({"msg": "Monto Neto no puede estar vacío"}), 400
+        if not monto_iva:
+            return jsonify({"msg": "Monto IVA no puede estar vacío"}), 400
+        if not monto_otros_impuestos and monto_otros_impuestos != 0:
+            return jsonify({"msg": "Monto otros Impuestos no puede estar vacío"}), 400
+        if not monto_total:
+            return jsonify({"msg": "Monto Total no puede estar vacío"}), 400
+        if not forma_pago:
+            return jsonify({"msg": "Forma de Pago no puede estar vacío"}), 400
+        
+        documentos_venta = Documento_Venta.query.filter_by(numero_documento = numero_documento).all()
+        documentos_venta = list(map(lambda documento_venta: documento_venta.serialize(), documentos_venta)) #DEVUELVE LISTA DE DICCIONARIOS CON MATCHES DE DOCUMENTOS DE VENTA
+        for documento in documentos_venta:
+            if documento['numero_documento'] == numero_documento and documento['tipo_documento'] == tipo_documento:
+                return jsonify({"msg": "Numero de Documento y Tipo de Documento ya se encuentra ingresado"}), 400        
+
+        documento_venta = Documento_Venta()
+        documento_venta.tipo_documento = tipo_documento
+        documento_venta.numero_documento = numero_documento
+        documento_venta.fecha_emision = fecha_emision
+        documento_venta.monto_neto = monto_neto
+        documento_venta.monto_iva = monto_iva
+        documento_venta.monto_otros_impuestos = monto_otros_impuestos
+        documento_venta.monto_total = monto_total
+        documento_venta.forma_pago = forma_pago
+
+        documento_venta.save()    
+        return jsonify(documento_venta.serialize()), 200
+
 if __name__ == "__main__":
     manager.run()
+
+    
