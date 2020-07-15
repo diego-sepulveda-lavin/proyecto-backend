@@ -284,8 +284,8 @@ class Categoria(db.Model):
     def serialize(self):
         return {
             "id": self.id,
-            "nombre": self.nombre,
-            "productos": self.productos
+            "nombre": self.nombre
+            
         }
     def save(self):
         db.session.add(self)
@@ -293,8 +293,7 @@ class Categoria(db.Model):
     def update(self):
         db.session.commit()
     def delete(self):
-        db.session.add(self)
-        db.session.commit()
+        pass
 
 class Cuadratura_Caja(db.Model):
     __tablename__ = "cuadraturas_cajas"

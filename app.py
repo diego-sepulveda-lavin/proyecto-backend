@@ -309,8 +309,8 @@ def login():
 
     return jsonify(data), 200
 
-@app.route('/api/categoria', methods=['GET'])
-@app.route('/api/categoria/<int:id>', methods=["GET", "POST", "PUT", "DELETE"])
+@app.route('/api/categorias', methods=['GET', "POST"])
+@app.route('/api/categoria/<int:id>', methods=["GET", "PUT"])
 def categorias(id = None):
     if request.method == 'GET':
         if not id:
@@ -320,9 +320,12 @@ def categorias(id = None):
                 return jsonify (categorias),200
             return jsonify({"msg": "Categoria no existente"}),400
         categoria = Categoria.query.get(id)
-        if categoria:
-            return (categoria.serialize()),200
-        return jsonify({"msg": "categoria no encontrada"}),400 
+        if id:
+            categoria = Categoria.query.get(id)
+            if categoria:
+                return (categoria.serialize()),200
+            else:
+                return jsonify({"msg": "categoria no encontrada"}),400 
     
     if request.method == 'POST':
         nombre = request.json.get("nombre", None)
@@ -332,40 +335,32 @@ def categorias(id = None):
         if name_overlapped:
             return jsonify({"msg": "Categoria ya existe"})
 
-    if request.method == 'DELETE':
-        if id:
-            categoria= Categoria.query.get(id)
-            if Categoria:
-                categoria.delete()
-                return jsonify({"msg": f"Categoria {empresa.nombre} eliminada"}),200
-            else:
-                return jsonify({"msg": "categoria no encontrada"}),400 
-            categoria = Categoria()
-            categoria.nombre = nombre
-            categoria.save()
+        categoria = Categoria()
+        categoria.nombre = nombre
+        
+        categoria.save()    
+        return jsonify(categoria.serialize()), 200
     
     if request.method == 'PUT':
-        if id:
+        
             nombre = request.json.get("nombre", None)
             
             if not nombre:
-                return jsonify({"msg": "Nombre de empresa no puede estar vacío"}),400
+                return jsonify({"msg": "Categoria no puede estar vacío"}),400
                         
-            categoria_update = Empresa.query.get(id)
+            categoria_update = Categoria.query.get(id)
             if not categoria_update:
-                return jsonify({"msg": "Empresa no se encuentra en el sistema"}),401
+                return jsonify({"msg": "Categoria no se encuentra en el sistema"}),401
 
            
             categoria_update.nombre = nombre
                     
             categoria_update.update()
-            data = {"msg": "Empresa Modificada", "user": categoria_update.serialize()}
+            data = {"msg": "Categoria Modificada", "user": categoria_update.serialize()}
             return jsonify(data),200
 
 
-@app.route('/api/productos', methods = ['GET'])
-@app.route("/api/productos/<nombre_producto>", methods=["GET", "POST", "PUT", "DELETE"])
-def productos(nombre_producto = None):
+
 @app.route("/api/proveedores", methods = ['GET', 'POST'])
 @app.route("/api/proveedores/<int:id>", methods = ['GET', 'PUT', 'DELETE'])
 def proveedores(id = None):
@@ -544,6 +539,74 @@ def productos(id=None):
         else:
             return jsonify({"msg" : "Producto no encontrado"}), 200
             producto.delete()
+
+@app.route("/api/cuadratura_caja", methods = ['GET', 'POST'])
+@app.route("/api/cuadratura_caja/<int:id>", methods = ['GET', 'PUT', 'DELETE'])
+def cuadratura_caja(id = None):
+    if request.method == 'GET':
+        if not id:
+            cuadraturas_cajas = Cuadratura_Caja.query.all()
+            cuadraturas_cajas = list(map(lambda cuadratura_caja: cuadratura_caja.serialize(), cuadraturas_cajas))
+            return jsonify(cuadraturas_cajas), 200
+
+        if id:
+            cuadratura_caja = Cuadratura_Caja.query.get(id)
+            if proveedor:
+                return jsonify(cuadratura_caja.serialize()), 200
+            else:
+                return jsonify({"msg": "id asociado a cuadratura de caja no encontrada"}), 400
+
+    if request.method == 'POST':
+        data = request.get_json()
+        if not data["usuario_id"]:
+            return jsonify({"msg" : "por favor ingresar user_id"})
+        
+        if not data["admin_id"]:
+            return jsonify({"msg" : "por favor ingresar admin_id"})
+        
+        if not data["fecha_apertura"]:
+            return jsonify({})
+        
+        if not data["fecha_cierre"]:
+            return jsonify({})
+        
+        if not data["monto_apertura"]:
+            return jsonify({"msg" : "por favor ingresar monto de apertura"})
+
+        if not data["monto_transferencia"]:
+            return jsonify({"msg" : "por favor ingresar monto efectuado por transferencia"})
+        
+        if not data["monto_efectivo"]:
+            return jsonify({"msg" : "por favor ingresar monto efectuado en efectivo"})
+        
+        if not data["monto_tarjeta"]:
+            return jsonify({"msg" : "por favor ingresar monto efectuado por tarjeta"})
+        
+        if not data["monto_cierre"]:
+            return jsonify({})
+        
+        if not data["diferencia_en_caja"]:
+            return jsonify({})
+
+                
+        cuadratura_caja = cuadratura_caja()
+        cuadratura_caja.usuario_id = data["usuario_id"]
+        cuadratura_caja.admin_id = data["admin_id"]
+        cuadratura_caja.fecha_apertura = data["fecha_apertura"]
+        cuadratura_caja.fecha_cierre = data["fecha_cierre"]
+        cuadratura_caja.monto_apertura = data["monto_apertura"]
+        cuadratura_caja.monto_transferencia = data["monto_transferencia"]
+        cuadratura_caja.monto_efectivo = data["monto_efectivo"]
+        cuadratura_caja.monto_tarjeta = data["monto_tarjeta"]
+        cuadratura_caja.monto_cierre = data["monto_cierre"]
+        cuadratura_caja.diferencia_en_caja = data["diferencia_en_caja"]
+
+
+
+
+        producto.save()
+       
+        return jsonify({"msg": "Producto creado exitosamente"}), 201
 
 if __name__ == "__main__":
     manager.run()
