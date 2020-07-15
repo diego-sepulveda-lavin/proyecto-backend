@@ -34,7 +34,7 @@ class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     nombre = db.Column(db.String(100), nullable = False)
     apellido = db.Column(db.String(100), nullable = False)
-    codigo = db.Column(db.Integer, nullable = False, unique = True)
+    codigo = db.Column(db.String(1000), unique = True)
     rut = db.Column(db.String(13), nullable = False, unique = True)
     rol = db.Column(db.String(100), nullable = False)
     email = db.Column(db.String(100), nullable = False,  unique = True)
@@ -64,11 +64,16 @@ class Usuario(db.Model):
         }
 
     def save(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
     def update(self):
-        pass
+        db.session.commit()
     def delete(self):
-        pass
+        db.session.delete(self)
+        db.session.commit()
+    def generaCodigo(self):
+        return f"usr-{self.id}"
+        
 
 class Entrada_Inventario(db.Model):
     __tablename__ = "entradas_inventario"
@@ -263,9 +268,10 @@ class Proveedor(db.Model):
         }
         
     def save(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
     def update(self):
-        pass
+        db.session.commit()
     def delete(self):
         pass
 
