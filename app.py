@@ -226,7 +226,8 @@ def proveedores(id = None):
         proveedor = Proveedor.query.get(id)
         if not proveedor:
             return jsonify({"msg": "Empresa no se encuentra en el sistema"}), 401
-
+        
+        
         nombre = request.json.get("nombre", None)
         rut = request.json.get("rut", None)
         razon_social = request.json.get("razon_social", None)
@@ -247,13 +248,13 @@ def proveedores(id = None):
             return jsonify({"msg": "Dirección no puede estar vacío"}), 400
         
         check_rut = Proveedor.query.filter_by(rut = rut).first()
-        if check_rut:
+        if check_rut and check_rut.rut != rut:
             return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
 
         check_razon_social = Proveedor.query.filter_by(razon_social = razon_social).first()
-        if check_razon_social:
+        if check_razon_social and check_razon_social.razon_social != razon_social:
             return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 401
-            
+             
         proveedor.nombre = nombre
         proveedor.rut = rut
         proveedor.razon_social = razon_social
