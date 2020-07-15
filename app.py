@@ -10,7 +10,6 @@ from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
 
-
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.config.from_object(Development)
@@ -32,11 +31,9 @@ def my_expired_token_callback(expired_token):
         'msg': 'The {} token has expired. Please Login Again'.format(token_type)
     }), 401
 
-
 @app.route('/')
 def home():
     return 'Hola mundo'
-
 
 @app.route("/api/login/", methods = ["POST"])
 def login():
@@ -63,7 +60,6 @@ def login():
     }
 
     return jsonify(data), 200
-
 
 @app.route('/api/empresas', methods = ['GET', "POST"])
 @app.route('/api/empresas/<int:id>', methods = ['GET', "PUT","DELETE"])
@@ -124,6 +120,7 @@ def empresas(id=None):
         empresa.save()
 
         return jsonify(empresa.serialize()),200
+
     ### Actualizar Empresa by ID ###
     if request.method == "PUT":
         if id:
@@ -184,7 +181,7 @@ def usuarios(id = None):
             usuarios = list(map(lambda usuario: usuario.serialize(), usuarios))
             return jsonify(usuarios),200
 
-    ### Ver Usuario by ID ###
+        ### Ver Usuario by ID ###
         else:
             usuario = Usuario.query.get(id)
             if not usuario:
@@ -239,7 +236,7 @@ def usuarios(id = None):
         usuario.update()
 
         return jsonify(usuario.serialize()),200
-    
+
     ### Actualizar Usuario ###
     if request.method == "PUT":
         if id:
@@ -255,7 +252,6 @@ def usuarios(id = None):
             password = request.json.get("password", None)
             status = request.json.get("status", None)
         
-
             rut_ocupado = Usuario.query.filter_by(rut = rut)
             if rut_ocupado and rut is not None:
                 return jsonify({"msg": "Rut ya se encuentra registrado."}),401
@@ -366,7 +362,6 @@ def entrada_inventario(id = None):
         entrada_actualizar.update() 
         return jsonify({"msg": "Producto modificado."}),200      
 
-
 @app.route('/api/salidas-inventario', methods = ['GET', "POST"])
 @app.route("/api/salidas-inventario/<int:id>", methods=["GET", "PUT"])
 def salidas_inventario(id=None):
@@ -391,19 +386,19 @@ def salidas_inventario(id=None):
     if request.method == 'POST':
         data = request.get_json()
         if not data["cantidad"]:
-            return jsonify({"msg" : "Cantidad del producto no puede estar vacia"})
+            return jsonify({"msg" : "Cantidad del producto no puede estar vacia"}), 401
         
         if not data["precio_costo_unitario"]:
-            return jsonify({"msg" : "Precio Costo Unitario del producto no puede estar vacio"})
+            return jsonify({"msg" : "Precio Costo Unitario del producto no puede estar vacio"}), 401
         
         if not data["usuario_id"]:
-            return jsonify({"msg" : "Usuario Id no puede estar vacio"})
+            return jsonify({"msg" : "Usuario Id no puede estar vacio"}), 401
         
         if not data["producto_id"]:
-            return jsonify({"msg" : "Producto Id no puede estar vacio"})
+            return jsonify({"msg" : "Producto Id no puede estar vacio"}), 401
         
         if not data["documento_venta_id"]:
-            return jsonify({"msg" : "Documento de Venta Id no puede estar vacio"})
+            return jsonify({"msg" : "Documento de Venta Id no puede estar vacio"}), 401
  
         salida_inventario = Salida_Inventario()
         salida_inventario.cantidad = data["cantidad"]
@@ -427,7 +422,6 @@ def salidas_inventario(id=None):
             salida_inventario.update()
 
             return jsonify({"msg": "Salida de inventario modificada exitosamente"}), 201
-
 
 @app.route('/api/facturas-compras', methods = ['GET', "POST"])
 @app.route("/api/facturas-compras/<int:id>", methods=["GET"])
@@ -453,28 +447,28 @@ def facturas_compras(id=None):
         data = request.get_json()
 
         if not data["folio"]:
-            return jsonify({"msg" : "Folio de nueva factura no puede estar vacio"})
+            return jsonify({"msg" : "Folio de nueva factura no puede estar vacio"}), 401
         
         if not data["fecha_emision"]:
-            return jsonify({"msg" : "Fecha de emisión de nueva factura no puede estar vacio"})
+            return jsonify({"msg" : "Fecha de emisión de nueva factura no puede estar vacio"}), 401
         
         if not data["fecha_recepcion"]:
-            return jsonify({"msg" : "Fecha de recepción de nueva factura no puede estar vacio"})
+            return jsonify({"msg" : "Fecha de recepción de nueva factura no puede estar vacio"}), 401
         
         if not data["monto_neto"]:
-            return jsonify({"msg" : "Monto Neto de nueva factura no puede estar vacio"})
+            return jsonify({"msg" : "Monto Neto de nueva factura no puede estar vacio"}), 401
         
         if not data["monto_iva"]:
-            return jsonify({"msg" : "Monto IVA de nueva factura no puede estar vacio"})
+            return jsonify({"msg" : "Monto IVA de nueva factura no puede estar vacio"}), 401
         
         if not data["monto_otros_impuestos"] >=0:
-            return jsonify({"msg" : "Monto de otros Impuestos de nueva factura no puede estar vacio"})
+            return jsonify({"msg" : "Monto de otros Impuestos de nueva factura no puede estar vacio"}), 401
         
         if not data["monto_total"]:
-            return jsonify({"msg" : "Monto Total de nueva factura no puede estar vacio"})
+            return jsonify({"msg" : "Monto Total de nueva factura no puede estar vacio"}), 401
         
         if not data["proveedor_id"]:
-            return jsonify({"msg" : "Id proveedor no puede estar vacio"})
+            return jsonify({"msg" : "Id proveedor no puede estar vacio"}), 401
 
         facturas_compras = Factura_Compra.query.filter_by(folio = data["folio"]).all() # Se debe verificar forma de no repetir ingreso de factura
         facturas_compras = list(map(lambda factura_compra: factura_compra.serialize(), facturas_compras))
@@ -494,7 +488,6 @@ def facturas_compras(id=None):
         factura_compra.save()
        
         return jsonify({"msg": "Factura ingresada exitosamente"}), 201
-
 
 @app.route('/api/productos', methods = ['GET', "POST"])
 @app.route("/api/productos/<int:id>", methods=["GET", "PUT", "DELETE"])
@@ -519,19 +512,19 @@ def productos(id=None):
     if request.method == 'POST':
         data = request.get_json()
         if not data["sku"]:
-            return jsonify({"msg" : "SKU del producto nuevo no puede estar vacio"})
+            return jsonify({"msg" : "SKU del producto nuevo no puede estar vacio"}), 401
         
         if not data["descripcion"]:
-            return jsonify({"msg" : "Descripcion del producto nuevo no puede estar vacio"})
+            return jsonify({"msg" : "Descripcion del producto nuevo no puede estar vacio"}), 401
         
         if not data["codigo_barra"]:
-            return jsonify({"msg" : "Codigo de Barra del producto nuevo no puede estar vacio"})
+            return jsonify({"msg" : "Codigo de Barra del producto nuevo no puede estar vacio"}), 401
         
         if not data["unidad_entrega"]:
-            return jsonify({"msg" : "Unidad de Entrega del producto nuevo no puede estar vacio"})
+            return jsonify({"msg" : "Unidad de Entrega del producto nuevo no puede estar vacio"}), 401
         
         if not data["categoria_id"]:
-            return jsonify({"msg" : "Categoría del producto nuevo no puede estar vacio"})
+            return jsonify({"msg" : "Categoría del producto nuevo no puede estar vacio"}), 401
 
         producto = Producto.query.filter_by(descripcion = data["descripcion"]).first()
         if producto:
@@ -567,11 +560,10 @@ def productos(id=None):
     if request.method == 'DELETE':
         producto = Producto.query.get(id)
         if producto:
-            return jsonify({"msg" : "Producto eliminado exitosamente"})
+            return jsonify({"msg" : "Producto eliminado exitosamente"}), 200
         else:
-            return jsonify({"msg" : "Producto no encontrado"}), 200
+            return jsonify({"msg" : "Producto no encontrado"}), 400
             producto.delete()
-
 
 @app.route("/api/documentos-venta", methods = ['GET', 'POST'])
 @app.route("/api/documentos-venta/<int:id>", methods = ['GET'])
@@ -604,27 +596,27 @@ def documentos_venta(id = None):
         forma_pago = request.json.get("forma_pago", None)
 
         if not tipo_documento:
-            return jsonify({"msg": "Tipo de Documento no puede estar vacío"}), 400
+            return jsonify({"msg": "Tipo de Documento no puede estar vacío"}), 401
         if not numero_documento:
-            return jsonify({"msg": "Numero de Documento no puede estar vacío"}), 400
+            return jsonify({"msg": "Numero de Documento no puede estar vacío"}), 401
         if not fecha_emision:
-            return jsonify({"msg": "Fecha de Emisión no puede estar vacío"}), 400
+            return jsonify({"msg": "Fecha de Emisión no puede estar vacío"}), 401
         if not monto_neto:
-            return jsonify({"msg": "Monto Neto no puede estar vacío"}), 400
+            return jsonify({"msg": "Monto Neto no puede estar vacío"}), 401
         if not monto_iva:
-            return jsonify({"msg": "Monto IVA no puede estar vacío"}), 400
+            return jsonify({"msg": "Monto IVA no puede estar vacío"}), 401
         if not monto_otros_impuestos and monto_otros_impuestos != 0:
-            return jsonify({"msg": "Monto otros Impuestos no puede estar vacío"}), 400
+            return jsonify({"msg": "Monto otros Impuestos no puede estar vacío"}), 401
         if not monto_total:
-            return jsonify({"msg": "Monto Total no puede estar vacío"}), 400
+            return jsonify({"msg": "Monto Total no puede estar vacío"}), 401
         if not forma_pago:
-            return jsonify({"msg": "Forma de Pago no puede estar vacío"}), 400
+            return jsonify({"msg": "Forma de Pago no puede estar vacío"}), 401
         
         documentos_venta = Documento_Venta.query.filter_by(numero_documento = numero_documento).all()
         documentos_venta = list(map(lambda documento_venta: documento_venta.serialize(), documentos_venta)) #DEVUELVE LISTA DE DICCIONARIOS CON MATCHES DE DOCUMENTOS DE VENTA
         for documento in documentos_venta:
             if documento['numero_documento'] == numero_documento and documento['tipo_documento'] == tipo_documento:
-                return jsonify({"msg": "Numero de Documento y Tipo de Documento ya se encuentra ingresado"}), 400        
+                return jsonify({"msg": "Numero de Documento y Tipo de Documento ya se encuentra ingresado"}), 401        
 
         documento_venta = Documento_Venta()
         documento_venta.tipo_documento = tipo_documento
@@ -638,7 +630,6 @@ def documentos_venta(id = None):
 
         documento_venta.save()    
         return jsonify(documento_venta.serialize()), 201
-
 
 @app.route("/api/proveedores", methods = ['GET', 'POST'])
 @app.route("/api/proveedores/<int:id>", methods = ['GET', 'PUT', 'DELETE'])
@@ -670,22 +661,22 @@ def proveedores(id = None):
         banco = request.json.get("banco", None)
 
         if not nombre:
-            return jsonify({"msg": "Nombre no puede estar vacío"}), 400
+            return jsonify({"msg": "Nombre no puede estar vacío"}), 401
         if not rut:
-            return jsonify({"msg": "Rut no puede estar vacío"}), 400
+            return jsonify({"msg": "Rut no puede estar vacío"}), 401
         if not razon_social:
-            return jsonify({"msg": "Razon Social no puede estar vacío"}), 400
+            return jsonify({"msg": "Razon Social no puede estar vacío"}), 401
         if not rubro:
-            return jsonify({"msg": "Rubro no puede estar vacío"}), 400
+            return jsonify({"msg": "Rubro no puede estar vacío"}), 401
         if not direccion:
-            return jsonify({"msg": "Dirección no puede estar vacío"}), 400
+            return jsonify({"msg": "Dirección no puede estar vacío"}), 401
         
         check_rut = Proveedor.query.filter_by(rut = rut).first()
         if check_rut:
-            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 400
+            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
         check_razon_social = Proveedor.query.filter_by(razon_social = razon_social).first()
         if check_razon_social:
-            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 400
+            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 401
 
         proveedor = Proveedor()
         proveedor.nombre = nombre
@@ -716,35 +707,35 @@ def proveedores(id = None):
         
         check_rut = Proveedor.query.filter_by(rut = rut).first()
         if check_rut and rut is not None:
-            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 400
+            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
 
         check_razon_social = Proveedor.query.filter_by(razon_social = razon_social).first()
         if check_razon_social and razon_social is not None:
-            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 400
+            return jsonify({"msg":"Razon social de empresa ya se encuentra registrada"}), 401
 
         if nombre is not None:
             if not nombre:
-                return jsonify({"msg": "Nombre no puede estar vacío"}), 400
+                return jsonify({"msg": "Nombre no puede estar vacío"}), 401
             proveedor.nombre = nombre
 
         if rut is not None:
             if not rut:
-                return jsonify({"msg": "Rut no puede estar vacío"}), 400
+                return jsonify({"msg": "Rut no puede estar vacío"}), 401
             proveedor.rut = rut
 
         if razon_social is not None:
             if not razon_social:
-                return jsonify({"msg": "Razon Social no puede estar vacío"}), 400
+                return jsonify({"msg": "Razon Social no puede estar vacía"}), 401
             proveedor.razon_social = razon_social
         
         if rubro is not None:
             if not rubro:
-                return jsonify({"msg": "Rubro no puede estar vacío"}), 400
+                return jsonify({"msg": "Rubro no puede estar vacío"}), 401
             proveedor.rubro = rubro
         
         if direccion is not None:
             if not direccion:
-                return jsonify({"msg": "Dirección no puede estar vacío"}), 400
+                return jsonify({"msg": "Dirección no puede estar vacío"}), 401
             proveedor.direccion = direccion
 
         if cuenta_corriente is not None:
@@ -769,7 +760,6 @@ def proveedores(id = None):
             return jsonify({"msg": f"Proveedor <{proveedor.nombre}> eliminado exitosamente."}),200
         else:
             return jsonify({"msg": "Proveedor no se encuentra registrado."}),400
-
 
 @app.route('/api/categoria', methods=['GET'])
 @app.route('/api/categoria/<int:id>', methods=["GET", "POST", "PUT", "DELETE"])
@@ -808,19 +798,17 @@ def categorias(id = None):
             nombre = request.json.get("nombre", None)
             
             if not nombre:
-                return jsonify({"msg": "Categoria no puede estar vacío"}),400
+                return jsonify({"msg": "Categoria no puede estar vacío"}),401
                         
             categoria_update = Categoria.query.get(id)
             if not categoria_update:
-                return jsonify({"msg": "Categoria no se encuentra en el sistema"}),401
-
+                return jsonify({"msg": "Categoria no se encuentra en el sistema"}),400
            
             categoria_update.nombre = nombre
                     
             categoria_update.update()
             data = {"msg": "Categoria Modificada", "user": categoria_update.serialize()}
             return jsonify(data),200
-
 
 @app.route("/api/cuadratura_caja", methods = ['GET', 'POST'])
 @app.route("/api/cuadratura_caja/<int:id>", methods = ['GET'])
@@ -841,34 +829,34 @@ def cuadratura_caja(id = None):
     if request.method == 'POST':
         data = request.get_json()
         if not data["usuario_id"]:
-            return jsonify({"msg" : "por favor ingresar user_id"})
+            return jsonify({"msg" : "por favor ingresar user_id"}), 401
         
         if not data["admin_id"]:
-            return jsonify({"msg" : "por favor ingresar admin_id"})
+            return jsonify({"msg" : "por favor ingresar admin_id"}), 401
         
         if not data["fecha_apertura"]:
-            return jsonify({"msg" : "por favor ingresar fecha apertura"})
+            return jsonify({"msg" : "por favor ingresar fecha apertura"}), 401
         
         if not data["fecha_cierre"]:
-            return jsonify({"msg" : "por favor ingresar fecha de cierre"})
+            return jsonify({"msg" : "por favor ingresar fecha de cierre"}), 401
         
         if not data["monto_apertura"]:
-            return jsonify({"msg" : "por favor ingresar monto de apertura"})
+            return jsonify({"msg" : "por favor ingresar monto de apertura"}), 401
 
         if not data["monto_transferencia"]:
-            return jsonify({"msg" : "por favor ingresar monto efectuado por transferencia"})
+            return jsonify({"msg" : "por favor ingresar monto efectuado por transferencia"}), 401
         
         if not data["monto_efectivo"]:
-            return jsonify({"msg" : "por favor ingresar monto efectuado en efectivo"})
+            return jsonify({"msg" : "por favor ingresar monto efectuado en efectivo"}), 401
         
         if not data["monto_tarjeta"]:
-            return jsonify({"msg" : "por favor ingresar monto efectuado por tarjeta"})
+            return jsonify({"msg" : "por favor ingresar monto efectuado por tarjeta"}), 401
         
         if not data["monto_cierre"]:
-            return jsonify({"msg" : "por favor ingresar monto de cierre"})
+            return jsonify({"msg" : "por favor ingresar monto de cierre"}), 401
         
         if not data["diferencia_en_caja"]:
-            return jsonify({"msg" : "por favor ingresar diferencia en caja"})
+            return jsonify({"msg" : "por favor ingresar diferencia en caja"}), 401
 
                 
         cuadratura_caja = cuadratura_caja()
@@ -883,13 +871,9 @@ def cuadratura_caja(id = None):
         cuadratura_caja.monto_cierre = data["monto_cierre"]
         cuadratura_caja.diferencia_en_caja = data["diferencia_en_caja"]
 
-
-
-
         cuadratura_caja.save()
        
         return jsonify({"msg": "cuadratura de caja creada exitosamente"}), 201
-
 
 if __name__ == "__main__":
     manager.run()
