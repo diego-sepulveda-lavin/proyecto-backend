@@ -543,13 +543,12 @@ def proveedores(id = None):
 
     # PERMITE ELIMINAR PROVEEDOR
     if request.method == 'DELETE':
-        if id:
-            proveedor = Proveedor.query.get(id)
-            if proveedor:
-                proveedor.delete()
-                return jsonify({"msg": f"Proveedor <{proveedor.nombre}> eliminado exitosamente."}),200
-            else:
-                return jsonify({"msg": "Proveedor no se encuentra registrado."}),400
+        proveedor = Proveedor.query.get(id)
+        if proveedor:
+            proveedor.delete()
+            return jsonify({"msg": f"Proveedor <{proveedor.nombre}> eliminado exitosamente."}),200
+        else:
+            return jsonify({"msg": "Proveedor no se encuentra registrado."}),400
 
 @app.route('/api/productos', methods = ['GET', "POST"])
 @app.route("/api/productos/<int:id>", methods=["GET", "PUT", "DELETE"])
@@ -758,6 +757,7 @@ def salidas_inventario(id=None):
             salida_inventario.update()
 
             return jsonify({"msg": "Salida de inventario modificada exitosamente"}), 201
+
 @app.route("/api/documentos-venta", methods = ['GET', 'POST'])
 @app.route("/api/documentos-venta/<int:id>", methods = ['GET'])
 def documentos_venta(id = None):
@@ -822,7 +822,7 @@ def documentos_venta(id = None):
         documento_venta.forma_pago = forma_pago
 
         documento_venta.save()    
-        return jsonify(documento_venta.serialize()), 200
+        return jsonify(documento_venta.serialize()), 201
 
 if __name__ == "__main__":
     manager.run()
