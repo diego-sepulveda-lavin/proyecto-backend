@@ -1,10 +1,11 @@
+from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
-from models import db, Empresa, Usuario, Producto, Categoria, Proveedor
+from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura_Compra, Entrada_Inventario, Cuadratura_Caja
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
@@ -34,6 +35,34 @@ def my_expired_token_callback(expired_token):
 @app.route('/')
 def home():
     return 'Hola mundo'
+
+
+@app.route("/api/login/", methods = ["POST"])
+def login():
+    rut = request.json.get("rut", None)
+    password = request.json.get("password", None)
+
+    if not rut:
+        return jsonify({"msg": "Rut no puede estar vacío"}),400
+    if not password:
+        return jsonify({"msg": "Password no puede estar vacío"}),400
+
+    userR = Usuario.query.filter_by(rut = rut).first()
+    if not userR:
+        return jsonify({"msg":"Rut o contraseña inválido."}),401
+    if not bcrypt.check_password_hash(userR.password, password):
+        return jsonify({"msg":"Rut o contraseña inválido."}), 401
+
+    expires = datetime.timedelta(hour=24)
+    access_token = create_access_token(identity=userR.rut, expires_delta=expires)
+
+    data = {
+        "access_token": access_token,
+        "user": userR.serialize()
+    }
+
+    return jsonify(data), 200
+
 
 @app.route('/api/empresas', methods = ['GET', "POST"])
 @app.route('/api/empresas/<int:id>', methods = ['GET', "PUT","DELETE"])
@@ -101,14 +130,10 @@ def empresas(id=None):
             if not empresaActualizar:
                 return jsonify({"msg": "Empresa no se encuentra en el sistema"}),401
 
-
             nombre = request.json.get("nombre", None)
             rut = request.json.get("rut", None)
             razon_social = request.json.get("razon_social", None)
             rubro = request.json.get("rubro", None)
-
-           
-            
 
             rutOcupado = Empresa.query.filter_by(rut = rut).first()
             if rutOcupado and rut is not None:
@@ -218,7 +243,7 @@ def usuarios(id = None):
         if id:
             usuario_actualizar = Usuario.query.get(id)
             if not usuario_actualizar:
-                return jsonify({"msg": "Usuario no se encuentra registrado"})
+                return jsonify({"msg": "Usuario no se encuentra registrado"}),401
             
             nombre = request.json.get("nombre", None)
             apellido = request.json.get("apellido", None)
@@ -238,36 +263,36 @@ def usuarios(id = None):
 
             if nombre is not None:
                 if not nombre:
-                    return jsonify({"msg": "Nombre no puede ir vacío."})
+                    return jsonify({"msg": "Nombre no puede ir vacío."}),401
                 usuario_actualizar.nombre = nombre
 
             if apellido is not None:
                 if not apellido:
-                    return jsonify({"msg": "Apellido no puede ir vacío."})
+                    return jsonify({"msg": "Apellido no puede ir vacío."}),401
                 usuario_actualizar.apellido = apellido 
                 
             if rut is not None:
                 if not rut:
-                    return jsonify({"msg": "Rut no puede ir vacío."})
+                    return jsonify({"msg": "Rut no puede ir vacío."}),401
                 usuario_actualizar.rut = rut
 
             if rol is not None:
                 if not rol:
-                    return jsonify({"msg": "Rol no puede ir vacío."})
+                    return jsonify({"msg": "Rol no puede ir vacío."}),401
                 usuario_actualizar.rol = rol
 
             if email is not None:
                 if not email:
-                    return jsonify({"msg": "Email no puede ir vacío"})
+                    return jsonify({"msg": "Email no puede ir vacío"}),401
                 usuario_actualizar.email = email
 
             if password is not None:
                 if not password:
-                    return jsonify({"msg": "Password no puede ir vacío."})
+                    return jsonify({"msg": "Password no puede ir vacío."}),401
                 usuario_actualizar.password = password
             if status is not None:
                 if status != False and status != True:
-                    return jsonify("Status debe ser true o false")
+                    return jsonify("Status debe ser true o false"),401
                 usuario_actualizar.status = status
             
             usuario_actualizar.update()
@@ -276,12 +301,68 @@ def usuarios(id = None):
                 "usuario": usuario_actualizar.serialize()
             }
             return jsonify(data),200
+ 
+@app.route("/api/entrada-inventario", methods =["GET", "POST"])
+@app.route("/api/entrada-inventario/<int:id>", methods=["GET", "PUT"])
+def entrada_inventario(id = None):
+    ### VER TODAS LAS ENTRADAS DE INVENTARIO ###
+    if request.method =="GET":
+        if id is None:
+            entradas = Entrada_Inventario.query.all()
+            if entradas:
+                entradas = list(map(lambda entrada: entrada.serialize(),entradas))
+                return jsonify(entradas),200
+            else:
+                return jsonify({"msg": "No hay entradas disponibles."}),401
+
+    ### VER UNA ENTRADA DE INVENTARIO POR ID ###
+        entrada = Entrada_Inventario.query.get(id)
+        if entrada:
+            return jsonify(entrada.serialize()),200
+        else:
+            return jsonify({"msg": "No existe registro asociado."}),401
+    
+    ### INSERTAR UNA ENTRADA DE INVENTARIO POR ID ###
+    if request.method == "POST":
+        data = request.get_json()
+
+        if data["cantidad"] <= 0:
+            return jsonify({"msg": "Cantidad debe ser mayor a 0"}),401
+        if data["precio_costo_unitario"] <= 0:
+            return jsonify({"msg": "Precio costo debe ser mayor a 0"}),401
+
+        entradaI = Entrada_Inventario()
+        entradaI.cantidad = data["cantidad"]
+        entradaI.precio_costo_unitario = data["precio_costo_unitario"]
+        entradaI.costo_total = entradaI.genera_costo_total()
+        entradaI.usuario_id = 1 #Cambiar
+        entradaI.producto_id = 1 #cambiar
+        entradaI.factura_compra_id = 1 #Cambiar
+        entradaI.save()
+        return jsonify({"msg": "Entrada guardada exitosamente."}),200
+
+    ### ACTUALIZAR UNA ENTRADA DE INVENTARIO POR ID ###
+    if request.method == "PUT":
+        entrada_actualizar = Entrada_Inventario.query.get(id)
+        if not entrada_actualizar:
+            return jsonify({"msg": "No existe registro."})
+        
+        cantidad = request.json.get("cantidad", None)
+        precio_costo_unitario = request.json.get("precio_costo_unitario", None)
+
+        if cantidad is not None:
+            if cantidad < 0:
+                return jsonify({"msg": "Cantidad no puede ser menor a 0"}),401
+            entrada_actualizar.cantidad = cantidad
+        if precio_costo_unitario is not None:
+            if precio_costo_unitario <= 0:
+                return jsonify({"msg": "Precio costo unitario no puede ser menor a 0"}),401
+            entrada_actualizar.precio_costo_unitario = precio_costo_unitario
+        entrada_actualizar.costo_total = entrada_actualizar.genera_costo_total() 
+        entrada_actualizar.update() 
+        return jsonify({"msg": "Producto modificado."}),200      
+
             
-        
-
-
-        
-
 
 @app.route("/api/login/", methods = ["POST"])
 def login():
@@ -311,6 +392,9 @@ def login():
 
 @app.route('/api/categorias', methods=['GET', "POST"])
 @app.route('/api/categoria/<int:id>', methods=["GET", "PUT"])
+       
+@app.route('/api/categoria', methods=['GET'])
+@app.route('/api/categoria/<int:id>', methods=["GET", "POST", "PUT", "DELETE"])
 def categorias(id = None):
     if request.method == 'GET':
         if not id:
@@ -403,10 +487,10 @@ def proveedores(id = None):
         
         check_rut = Proveedor.query.filter_by(rut = rut).first()
         if check_rut:
-            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
+            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 400
         check_razon_social = Proveedor.query.filter_by(razon_social = razon_social).first()
         if check_razon_social:
-            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 401
+            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 400
 
         proveedor = Proveedor()
         proveedor.nombre = nombre
@@ -420,11 +504,13 @@ def proveedores(id = None):
         proveedor.save()    
         return jsonify(proveedor.serialize()), 200
     
+    # PERMITE MODIFICAR PROVEEDOR
     if request.method == 'PUT':
         proveedor = Proveedor.query.get(id)
         if not proveedor:
-            return jsonify({"msg": "Empresa no se encuentra en el sistema"}), 401
-
+            return jsonify({"msg": "Empresa no se encuentra en el sistema"}), 400
+        
+        
         nombre = request.json.get("nombre", None)
         rut = request.json.get("rut", None)
         razon_social = request.json.get("razon_social", None)
@@ -432,33 +518,45 @@ def proveedores(id = None):
         direccion = request.json.get("direccion", None)
         cuenta_corriente = request.json.get("cuenta_corriente", None)
         banco = request.json.get("banco", None)
-
-        if not nombre:
-            return jsonify({"msg": "Nombre no puede estar vacío"}), 400
-        if not rut:
-            return jsonify({"msg": "Rut no puede estar vacío"}), 400
-        if not razon_social:
-            return jsonify({"msg": "Razon Social no puede estar vacío"}), 400
-        if not rubro:
-            return jsonify({"msg": "Rubro no puede estar vacío"}), 400
-        if not direccion:
-            return jsonify({"msg": "Dirección no puede estar vacío"}), 400
         
         check_rut = Proveedor.query.filter_by(rut = rut).first()
-        if check_rut:
-            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
+        if check_rut and rut is not None:
+            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 400
 
         check_razon_social = Proveedor.query.filter_by(razon_social = razon_social).first()
-        if check_razon_social:
-            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 401
-            
-        proveedor.nombre = nombre
-        proveedor.rut = rut
-        proveedor.razon_social = razon_social
-        proveedor.rubro = rubro
-        proveedor.direccion = direccion
-        proveedor.cuenta_corriente = cuenta_corriente
-        proveedor.banco = banco
+        if check_razon_social and razon_social is not None:
+            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 400
+
+        if nombre is not None:
+            if not nombre:
+                return jsonify({"msg": "Nombre no puede estar vacío"}), 400
+            proveedor.nombre = nombre
+
+        if rut is not None:
+            if not rut:
+                return jsonify({"msg": "Rut no puede estar vacío"}), 400
+            proveedor.rut = rut
+
+        if razon_social is not None:
+            if not razon_social:
+                return jsonify({"msg": "Razon Social no puede estar vacío"}), 400
+            proveedor.razon_social = razon_social
+        
+        if rubro is not None:
+            if not rubro:
+                return jsonify({"msg": "Rubro no puede estar vacío"}), 400
+            proveedor.rubro = rubro
+        
+        if direccion is not None:
+            if not direccion:
+                return jsonify({"msg": "Dirección no puede estar vacío"}), 400
+            proveedor.direccion = direccion
+
+        if cuenta_corriente is not None:
+            proveedor.cuenta_corriente = cuenta_corriente
+
+        if banco is not None:
+            proveedor.banco = banco
 
         proveedor.update()
 
@@ -468,9 +566,20 @@ def proveedores(id = None):
         }
         return jsonify(data), 200
 
+    # PERMITE ELIMINAR PROVEEDOR
+    if request.method == 'DELETE':
+        if id:
+            proveedor = Proveedor.query.get(id)
+            if proveedor:
+                proveedor.delete()
+                return jsonify({"msg": f"Proveedor <{proveedor.nombre}> eliminado exitosamente."}),200
+            else:
+                return jsonify({"msg": "Proveedor no se encuentra registrado."}),400
+
 @app.route('/api/productos', methods = ['GET', "POST"])
 @app.route("/api/productos/<int:id>", methods=["GET", "PUT", "DELETE"])
 def productos(id=None):
+    # Devuelve listado de todos los productos
     if request.method == 'GET':
         if id is None:
             productos = Producto.query.all()
@@ -486,6 +595,7 @@ def productos(id=None):
             else:
                 return jsonify({"msg" : "Producto no encontrado"}), 400
 
+    # Creación de un nuevo producto
     if request.method == 'POST':
         data = request.get_json()
         if not data["sku"]:
@@ -517,6 +627,7 @@ def productos(id=None):
        
         return jsonify({"msg": "Producto creado exitosamente"}), 201
 
+    # Actualización de un producto
     if request.method == 'PUT':
         producto = Producto.query.get(id)
         if not producto:
@@ -532,6 +643,7 @@ def productos(id=None):
 
             return jsonify({"msg": "Producto actualizado exitosamente"}), 201
 
+    # Elimina un producto
     if request.method == 'DELETE':
         producto = Producto.query.get(id)
         if producto:
@@ -541,7 +653,7 @@ def productos(id=None):
             producto.delete()
 
 @app.route("/api/cuadratura_caja", methods = ['GET', 'POST'])
-@app.route("/api/cuadratura_caja/<int:id>", methods = ['GET', 'PUT', 'DELETE'])
+@app.route("/api/cuadratura_caja/<int:id>", methods = ['GET'])
 def cuadratura_caja(id = None):
     if request.method == 'GET':
         if not id:
@@ -565,10 +677,10 @@ def cuadratura_caja(id = None):
             return jsonify({"msg" : "por favor ingresar admin_id"})
         
         if not data["fecha_apertura"]:
-            return jsonify({})
+            return jsonify({"msg" : "por favor ingresar fecha apertura"})
         
         if not data["fecha_cierre"]:
-            return jsonify({})
+            return jsonify({"msg" : "por favor ingresar fecha de cierre"})
         
         if not data["monto_apertura"]:
             return jsonify({"msg" : "por favor ingresar monto de apertura"})
@@ -583,17 +695,17 @@ def cuadratura_caja(id = None):
             return jsonify({"msg" : "por favor ingresar monto efectuado por tarjeta"})
         
         if not data["monto_cierre"]:
-            return jsonify({})
+            return jsonify({"msg" : "por favor ingresar monto de cierre"})
         
         if not data["diferencia_en_caja"]:
-            return jsonify({})
+            return jsonify({"msg" : "por favor ingresar diferencia en caja"})
 
                 
         cuadratura_caja = cuadratura_caja()
         cuadratura_caja.usuario_id = data["usuario_id"]
         cuadratura_caja.admin_id = data["admin_id"]
-        cuadratura_caja.fecha_apertura = data["fecha_apertura"]
-        cuadratura_caja.fecha_cierre = data["fecha_cierre"]
+        cuadratura_caja.fecha_apertura = datetime.strptime(data["fecha_apertura"], '%Y-%m-%d %H:%M:%S')
+        cuadratura_caja.fecha_cierre = datetime.strptime(data["fecha_cierre"], '%Y-%m-%d %H:%M:%S')
         cuadratura_caja.monto_apertura = data["monto_apertura"]
         cuadratura_caja.monto_transferencia = data["monto_transferencia"]
         cuadratura_caja.monto_efectivo = data["monto_efectivo"]
@@ -604,9 +716,73 @@ def cuadratura_caja(id = None):
 
 
 
-        producto.save()
+        cuadratura_caja.save()
        
         return jsonify({"msg": "Producto creado exitosamente"}), 201
+
+@app.route('/api/facturas-compras', methods = ['GET', "POST"])
+@app.route("/api/facturas-compras/<int:id>", methods=["GET"])
+def facturas_compras(id=None):
+
+    # Devuelve todas las facturas registradas
+    if request.method == 'GET':
+        if id is None:
+            facturas_compras = Factura_Compra.query.all()
+            if facturas_compras:
+                facturas_compras = list(map(lambda factura_compra: factura_compra.serialize(),facturas_compras))
+                return jsonify(facturas_compras), 200
+            else:
+                return jsonify({"msg" : "No hay datos de facturas"}), 400
+        if id is not None:
+            facturas_compras = Factura_Compra.query.get(id)
+            if facturas_compras:
+                return jsonify(factura_compra.serialize()), 200
+            else:
+                return jsonify({"msg" : "Factura no encontrada"}), 400
+
+    # Ingreso de nueva factura
+    if request.method == 'POST':
+        data = request.get_json()
+        if not data["folio"]:
+            return jsonify({"msg" : "Folio de nueva factura no puede estar vacio"})
+        
+        if not data["fecha_emision"]:
+            return jsonify({"msg" : "Fecha de emisión de nueva factura no puede estar vacio"})
+        
+        if not data["fecha_recepcion"]:
+            return jsonify({"msg" : "Fecha de recepción de nueva factura no puede estar vacio"})
+        
+        if not data["monto_neto"]:
+            return jsonify({"msg" : "Monto Neto de nueva factura no puede estar vacio"})
+        
+        if not data["monto_iva"]:
+            return jsonify({"msg" : "Monto IVA de nueva factura no puede estar vacio"})
+        
+        if not data["monto_otros_impuestos"] >=0:
+            return jsonify({"msg" : "Monto de otros Impuestos de nueva factura no puede estar vacio"})
+        
+        if not data["monto_total"]:
+            return jsonify({"msg" : "Monto Total de nueva factura no puede estar vacio"})
+        
+        if not data["proveedor_id"]:
+            return jsonify({"msg" : "Id proveedor no puede estar vacio"})
+
+        factura_compra = Factura_Compra.query.get(id) # Se debe verificar forma de no repetir ingreso de factura
+        if factura_compra:
+            return jsonify({"msg" : "Factura ya existe"})
+
+        factura_compra = Factura_Compra()
+        factura_compra.folio = data["folio"]
+        factura_compra.fecha_emision = datetime.strptime(data["fecha_emision"], '%Y-%m-%d %H:%M:%S') 
+        factura_compra.fecha_recepcion = datetime.strptime(data["fecha_recepcion"], '%Y-%m-%d %H:%M:%S') 
+        factura_compra.monto_neto = data["monto_neto"]
+        factura_compra.monto_iva = data["monto_iva"]
+        factura_compra.monto_otros_impuestos = data["monto_otros_impuestos"]
+        factura_compra.monto_total = data["monto_total"]
+        factura_compra.proveedor_id = data["proveedor_id"]
+        factura_compra.save()
+       
+        return jsonify({"msg": "Factura ingresada exitosamente"}), 201
 
 if __name__ == "__main__":
     manager.run()

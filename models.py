@@ -102,11 +102,14 @@ class Entrada_Inventario(db.Model):
         }
 
     def save(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
     def update(self):
-        pass
+        db.session.commit()
     def delete(self):
         pass
+    def genera_costo_total(self):
+        return self.cantidad*self.precio_costo_unitario
 
 class Salida_Inventario(db.Model):
     __tablename__ = "salidas_inventario"
@@ -169,11 +172,13 @@ class Factura_Compra(db.Model):
         }
 
     def save(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
     def update(self):
-        pass
+        db.session.commit()
     def delete(self):
-        pass
+        db.session.delete(self)
+        db.session.commit()
 
 class Producto(db.Model):
     __tablename__ = "productos"
@@ -273,7 +278,8 @@ class Proveedor(db.Model):
     def update(self):
         db.session.commit()
     def delete(self):
-        pass
+        db.session.delete(self)
+        db.session.commit()
 
 class Categoria(db.Model):
     __tablename__ = "categorias"
@@ -325,7 +331,8 @@ class Cuadratura_Caja(db.Model):
         }
     
     def save(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
     def update(self):
         pass
     def delete(self):
