@@ -306,7 +306,7 @@ def usuarios(id = None):
 @app.route("/api/entrada-inventario/<int:id>", methods=["GET", "PUT"])
 def entrada_inventario(id = None):
     ### VER TODAS LAS ENTRADAS DE INVENTARIO ###
-    if request.method =="GET":
+    if request.method =="GET":        
         if id is None:
             entradas = Entrada_Inventario.query.all()
             if entradas:
@@ -358,6 +358,7 @@ def entrada_inventario(id = None):
             if precio_costo_unitario <= 0:
                 return jsonify({"msg": "Precio costo unitario no puede ser menor a 0"}),401
             entrada_actualizar.precio_costo_unitario = precio_costo_unitario
+            
         entrada_actualizar.costo_total = entrada_actualizar.genera_costo_total() 
         entrada_actualizar.update() 
         return jsonify({"msg": "Producto modificado."}),200      
