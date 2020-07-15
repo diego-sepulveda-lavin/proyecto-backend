@@ -135,11 +135,13 @@ class Salida_Inventario(db.Model):
         }
 
     def save(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
     def update(self):
-        pass
+        db.session.commit()
     def delete(self):
-        pass
+        db.session.delete(self)
+        db.session.commit()
 
 class Factura_Compra(db.Model):
     __tablename__ = "facturas_compras"
