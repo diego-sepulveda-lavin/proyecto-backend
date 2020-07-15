@@ -102,11 +102,14 @@ class Entrada_Inventario(db.Model):
         }
 
     def save(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
     def update(self):
-        pass
+        db.session.commit()
     def delete(self):
         pass
+    def genera_costo_total(self):
+        return self.cantidad*self.precio_costo_unitario
 
 class Salida_Inventario(db.Model):
     __tablename__ = "salidas_inventario"

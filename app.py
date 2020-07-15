@@ -4,7 +4,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
-from models import db, Empresa, Usuario, Producto, Categoria, Proveedor
+from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Entrada_Inventario
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
@@ -34,6 +34,34 @@ def my_expired_token_callback(expired_token):
 @app.route('/')
 def home():
     return 'Hola mundo'
+
+
+@app.route("/api/login/", methods = ["POST"])
+def login():
+    rut = request.json.get("rut", None)
+    password = request.json.get("password", None)
+
+    if not rut:
+        return jsonify({"msg": "Rut no puede estar vacío"}),400
+    if not password:
+        return jsonify({"msg": "Password no puede estar vacío"}),400
+
+    userR = Usuario.query.filter_by(rut = rut).first()
+    if not userR:
+        return jsonify({"msg":"Rut o contraseña inválido."}),401
+    if not bcrypt.check_password_hash(userR.password, password):
+        return jsonify({"msg":"Rut o contraseña inválido."}), 401
+
+    expires = datetime.timedelta(hour=24)
+    access_token = create_access_token(identity=userR.rut, expires_delta=expires)
+
+    data = {
+        "access_token": access_token,
+        "user": userR.serialize()
+    }
+
+    return jsonify(data), 200
+
 
 @app.route('/api/empresas', methods = ['GET', "POST"])
 @app.route('/api/empresas/<int:id>', methods = ['GET', "PUT","DELETE"])
@@ -218,7 +246,7 @@ def usuarios(id = None):
         if id:
             usuario_actualizar = Usuario.query.get(id)
             if not usuario_actualizar:
-                return jsonify({"msg": "Usuario no se encuentra registrado"})
+                return jsonify({"msg": "Usuario no se encuentra registrado"}),401
             
             nombre = request.json.get("nombre", None)
             apellido = request.json.get("apellido", None)
@@ -238,36 +266,36 @@ def usuarios(id = None):
 
             if nombre is not None:
                 if not nombre:
-                    return jsonify({"msg": "Nombre no puede ir vacío."})
+                    return jsonify({"msg": "Nombre no puede ir vacío."}),401
                 usuario_actualizar.nombre = nombre
 
             if apellido is not None:
                 if not apellido:
-                    return jsonify({"msg": "Apellido no puede ir vacío."})
+                    return jsonify({"msg": "Apellido no puede ir vacío."}),401
                 usuario_actualizar.apellido = apellido 
                 
             if rut is not None:
                 if not rut:
-                    return jsonify({"msg": "Rut no puede ir vacío."})
+                    return jsonify({"msg": "Rut no puede ir vacío."}),401
                 usuario_actualizar.rut = rut
 
             if rol is not None:
                 if not rol:
-                    return jsonify({"msg": "Rol no puede ir vacío."})
+                    return jsonify({"msg": "Rol no puede ir vacío."}),401
                 usuario_actualizar.rol = rol
 
             if email is not None:
                 if not email:
-                    return jsonify({"msg": "Email no puede ir vacío"})
+                    return jsonify({"msg": "Email no puede ir vacío"}),401
                 usuario_actualizar.email = email
 
             if password is not None:
                 if not password:
-                    return jsonify({"msg": "Password no puede ir vacío."})
+                    return jsonify({"msg": "Password no puede ir vacío."}),401
                 usuario_actualizar.password = password
             if status is not None:
                 if status != False and status != True:
-                    return jsonify("Status debe ser true o false")
+                    return jsonify("Status debe ser true o false"),401
                 usuario_actualizar.status = status
             
             usuario_actualizar.update()
@@ -277,38 +305,69 @@ def usuarios(id = None):
             }
             return jsonify(data),200
             
+@app.route("/api/entrada-inventario", methods =["GET", "POST"])
+@app.route("/api/entrada-inventario/<int:id>", methods=["GET", "PUT"])
+def entrada_inventario(id = None):
+    ### VER TODAS LAS ENTRADAS DE INVENTARIO ###
+    if request.method =="GET":
+        if id is None:
+            entradas = Entrada_Inventario.query.all()
+            if entradas:
+                entradas = list(map(lambda entrada: entrada.serialize(),entradas))
+                return jsonify(entradas),200
+            else:
+                return jsonify({"msg": "No hay entradas disponibles."}),401
+
+    ### VER UNA ENTRADA DE INVENTARIO POR ID ###
+        entrada = Entrada_Inventario.query.get(id)
+        if entrada:
+            return jsonify(entrada.serialize()),200
+        else:
+            return jsonify({"msg": "No existe registro asociado."}),401
+    
+    ### INSERTAR UNA ENTRADA DE INVENTARIO POR ID ###
+    if request.method == "POST":
+        data = request.get_json()
+
+        if data["cantidad"] <= 0:
+            return jsonify({"msg": "Cantidad debe ser mayor a 0"}),401
+        if data["precio_costo_unitario"] <= 0:
+            return jsonify({"msg": "Precio costo debe ser mayor a 0"}),401
+
+        entradaI = Entrada_Inventario()
+        entradaI.cantidad = data["cantidad"]
+        entradaI.precio_costo_unitario = data["precio_costo_unitario"]
+        entradaI.costo_total = entradaI.genera_costo_total()
+        entradaI.usuario_id = 1 #Cambiar
+        entradaI.producto_id = 1 #cambiar
+        entradaI.factura_compra_id = 1 #Cambiar
+        entradaI.save()
+        return jsonify({"msg": "Entrada guardada exitosamente."}),200
+
+    ### ACTUALIZAR UNA ENTRADA DE INVENTARIO POR ID ###
+    if request.method == "PUT":
+        entrada_actualizar = Entrada_Inventario.query.get(id)
+        if not entrada_actualizar:
+            return jsonify({"msg": "No existe registro."})
         
+        cantidad = request.json.get("cantidad", None)
+        precio_costo_unitario = request.json.get("precio_costo_unitario", None)
 
+        if cantidad is not None:
+            if cantidad < 0:
+                return jsonify({"msg": "Cantidad no puede ser menor a 0"}),401
+            entrada_actualizar.cantidad = cantidad
+        if precio_costo_unitario is not None:
+            if precio_costo_unitario <= 0:
+                return jsonify({"msg": "Precio costo unitario no puede ser menor a 0"}),401
+            entrada_actualizar.precio_costo_unitario = precio_costo_unitario
+        entrada_actualizar.costo_total = entrada_actualizar.genera_costo_total() 
+        entrada_actualizar.update() 
+        return jsonify({"msg": "Producto modificado."}),200      
 
-        
+            
 
-
-@app.route("/api/login/", methods = ["POST"])
-def login():
-    rut = request.json.get("rut", None)
-    password = request.json.get("password", None)
-
-    if not rut:
-        return jsonify({"msg": "Rut no puede estar vacío"}),400
-    if not password:
-        return jsonify({"msg": "Password no puede estar vacío"}),400
-
-    userR = Usuario.query.filter_by(rut = rut).first()
-    if not userR:
-        return jsonify({"msg":"Rut o contraseña inválido."}),401
-    if not bcrypt.check_password_hash(userR.password, password):
-        return jsonify({"msg":"Rut o contraseña inválido."}), 401
-
-    expires = datetime.timedelta(hour=24)
-    access_token = create_access_token(identity=userR.rut, expires_delta=expires)
-
-    data = {
-        "access_token": access_token,
-        "user": userR.serialize()
-    }
-
-    return jsonify(data), 200
-
+       
 @app.route('/api/categoria', methods=['GET'])
 @app.route('/api/categoria/<int:id>', methods=["GET", "POST", "PUT", "DELETE"])
 def categorias(id = None):
@@ -363,9 +422,7 @@ def categorias(id = None):
             return jsonify(data),200
 
 
-@app.route('/api/productos', methods = ['GET'])
-@app.route("/api/productos/<nombre_producto>", methods=["GET", "POST", "PUT", "DELETE"])
-def productos(nombre_producto = None):
+
 @app.route("/api/proveedores", methods = ['GET', 'POST'])
 @app.route("/api/proveedores/<int:id>", methods = ['GET', 'PUT', 'DELETE'])
 def proveedores(id = None):
