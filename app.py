@@ -9,7 +9,7 @@ from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
-
+aaa
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
