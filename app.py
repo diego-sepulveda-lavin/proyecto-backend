@@ -361,8 +361,7 @@ def entrada_inventario(id = None):
         entrada_actualizar.costo_total = entrada_actualizar.genera_costo_total() 
         entrada_actualizar.update() 
         return jsonify({"msg": "Producto modificado."}),200      
-
-                  
+   
 @app.route('/api/categoria', methods=['GET'])
 @app.route('/api/categoria/<int:id>', methods=["GET", "POST", "PUT", "DELETE"])
 def categorias(id = None):
@@ -412,8 +411,6 @@ def categorias(id = None):
             categoria_update.update()
             data = {"msg": "Categoria Modificada", "user": categoria_update.serialize()}
             return jsonify(data),200
-
-
 
 @app.route("/api/proveedores", methods = ['GET', 'POST'])
 @app.route("/api/proveedores/<int:id>", methods = ['GET', 'PUT', 'DELETE'])
@@ -712,6 +709,7 @@ def facturas_compras(id=None):
     # Ingreso de nueva factura
     if request.method == 'POST':
         data = request.get_json()
+
         if not data["folio"]:
             return jsonify({"msg" : "Folio de nueva factura no puede estar vacio"})
         
@@ -736,10 +734,12 @@ def facturas_compras(id=None):
         if not data["proveedor_id"]:
             return jsonify({"msg" : "Id proveedor no puede estar vacio"})
 
-        factura_compra = Factura_Compra.query.get(id) # Se debe verificar forma de no repetir ingreso de factura
-        if factura_compra:
-            return jsonify({"msg" : "Factura ya existe"})
-
+        facturas_compras = Factura_Compra.query.filter_by(folio = data["folio"]).all() # Se debe verificar forma de no repetir ingreso de factura
+        facturas_compras = list(map(lambda factura_compra: factura_compra.serialize(), facturas_compras))
+        for factura in facturas_compras:
+            if factura["folio"] == data["folio"] and factura["proveedor_id"] == data["proveedor_id"]:
+                return jsonify({"msg" : "Factura ya existe"})
+        
         factura_compra = Factura_Compra()
         factura_compra.folio = data["folio"]
         factura_compra.fecha_emision = datetime.strptime(data["fecha_emision"], '%Y-%m-%d %H:%M:%S') 
