@@ -5,7 +5,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
-from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura_Compra, Entrada_Inventario
+from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura_Compra, Entrada_Inventario, Salida_Inventario
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
@@ -691,5 +691,75 @@ def facturas_compras(id=None):
        
         return jsonify({"msg": "Factura ingresada exitosamente"}), 201
 
+@app.route('/api/salidas-inventario', methods = ['GET', "POST"])
+@app.route("/api/salidas-inventario/<int:id>", methods=["GET", "PUT"])
+def salidas_inventario(id=None):
+
+    # Devuelve listado de todas las salidas de inventario por ventas
+    if request.method == 'GET':
+        if id is None:
+            salidas_inventario = Salida_Inventario.query.all()
+            if salidas_inventario:
+                salidas_inventario = list(map(lambda salida_inventario: salida_inventario.serialize(),salidas_inventario))
+                return jsonify(salidas_inventario), 200
+            else:
+                return jsonify({"msg" : "No hay registro de ventas"}), 400
+        if id is not None:
+            salida_inventario = Salida_Inventario.query.get(id)
+            if salida_inventario:
+                return jsonify(salida_inventario.serialize()), 200
+            else:
+                return jsonify({"msg" : "Registro de venta no encontrado"}), 400
+
+    # Registro de salida de producto por venta
+    if request.method == 'POST':
+        data = request.get_json()
+        if not data["cantidad"]:
+            return jsonify({"msg" : "Cantidad del producto no puede estar vacia"})
+        
+        if not data["precio_costo_unitario"]:
+            return jsonify({"msg" : "Precio Costo Unitario del producto no puede estar vacio"})
+        
+        if not data["costo_total"]:
+            return jsonify({"msg" : "Costo Total del producto no puede estar vacio"})
+        
+        if not data["fecha_registro"]:
+            return jsonify({"msg" : "Fecha de registro no puede estar vacia"})
+        
+        if not data["usuario_id"]:
+            return jsonify({"msg" : "Usuario Id no puede estar vacio"})
+        
+        if not data["producto_id"]:
+            return jsonify({"msg" : "Producto Id no puede estar vacio"})
+        
+        if not data["documento_venta_id"]:
+            return jsonify({"msg" : "Documento de Venta Id no puede estar vacio"})
+ 
+        salida_inventario = Salida_Inventario()
+        salida_inventario.cantidad = data["cantidad"]
+        salida_inventario.precio_costo_unitario = data["precio_costo_unitario"]
+        salida_inventario.costo_total = data["costo_total"]
+        salida_inventario.fecha_registro = data["fecha_registro"]
+        salida_inventario.usuario_id = data["usuario_id"] #revisar porque es una FK
+        salida_inventario.producto_id = data["producto_id"] #revisar porque es una FK
+        salida_inventario.documento_venta_id = data["documento_venta_id"] #revisar porque es una FK
+        salida_inventario.save()
+       
+        return jsonify({"msg": "Venta efectuada exitosamente"}), 201
+
+    if request.method == 'PUT':
+        salida_inventario = Salida_Inventario.query.get(id)
+        if not salida_inventario:
+            return jsonify({"msg" : "Salidad de inventario no encontrada"}), 400
+        else:
+            valor_cantidad = request.json.get("cantidad", None)
+            
+            salida_inventario.cantidad = valor_cantidad
+            salida_inventario.update()
+
+            return jsonify({"msg": "Salida de inventario modificada exitosamente"}), 201
+
 if __name__ == "__main__":
     manager.run()
+
+    
