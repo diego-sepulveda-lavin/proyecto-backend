@@ -363,9 +363,7 @@ def categorias(id = None):
             return jsonify(data),200
 
 
-@app.route('/api/productos', methods = ['GET'])
-@app.route("/api/productos/<nombre_producto>", methods=["GET", "POST", "PUT", "DELETE"])
-def productos(nombre_producto = None):
+
 @app.route("/api/proveedores", methods = ['GET', 'POST'])
 @app.route("/api/proveedores/<int:id>", methods = ['GET', 'PUT', 'DELETE'])
 def proveedores(id = None):
@@ -408,10 +406,10 @@ def proveedores(id = None):
         
         check_rut = Proveedor.query.filter_by(rut = rut).first()
         if check_rut:
-            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
+            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 400
         check_razon_social = Proveedor.query.filter_by(razon_social = razon_social).first()
         if check_razon_social:
-            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 401
+            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 400
 
         proveedor = Proveedor()
         proveedor.nombre = nombre
@@ -425,10 +423,11 @@ def proveedores(id = None):
         proveedor.save()    
         return jsonify(proveedor.serialize()), 200
     
+    # PERMITE MODIFICAR PROVEEDOR
     if request.method == 'PUT':
         proveedor = Proveedor.query.get(id)
         if not proveedor:
-            return jsonify({"msg": "Empresa no se encuentra en el sistema"}), 401
+            return jsonify({"msg": "Empresa no se encuentra en el sistema"}), 400
         
         
         nombre = request.json.get("nombre", None)
@@ -438,33 +437,45 @@ def proveedores(id = None):
         direccion = request.json.get("direccion", None)
         cuenta_corriente = request.json.get("cuenta_corriente", None)
         banco = request.json.get("banco", None)
-
-        if not nombre:
-            return jsonify({"msg": "Nombre no puede estar vacío"}), 400
-        if not rut:
-            return jsonify({"msg": "Rut no puede estar vacío"}), 400
-        if not razon_social:
-            return jsonify({"msg": "Razon Social no puede estar vacío"}), 400
-        if not rubro:
-            return jsonify({"msg": "Rubro no puede estar vacío"}), 400
-        if not direccion:
-            return jsonify({"msg": "Dirección no puede estar vacío"}), 400
         
         check_rut = Proveedor.query.filter_by(rut = rut).first()
-        if check_rut and check_rut.rut != rut:
-            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
+        if check_rut and rut is not None:
+            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 400
 
         check_razon_social = Proveedor.query.filter_by(razon_social = razon_social).first()
-        if check_razon_social and check_razon_social.razon_social != razon_social:
-            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 401
-             
-        proveedor.nombre = nombre
-        proveedor.rut = rut
-        proveedor.razon_social = razon_social
-        proveedor.rubro = rubro
-        proveedor.direccion = direccion
-        proveedor.cuenta_corriente = cuenta_corriente
-        proveedor.banco = banco
+        if check_razon_social and razon_social is not None:
+            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 400
+
+        if nombre is not None:
+            if not nombre:
+                return jsonify({"msg": "Nombre no puede estar vacío"}), 400
+            proveedor.nombre = nombre
+
+        if rut is not None:
+            if not rut:
+                return jsonify({"msg": "Rut no puede estar vacío"}), 400
+            proveedor.rut = rut
+
+        if razon_social is not None:
+            if not razon_social:
+                return jsonify({"msg": "Razon Social no puede estar vacío"}), 400
+            proveedor.razon_social = razon_social
+        
+        if rubro is not None:
+            if not rubro:
+                return jsonify({"msg": "Rubro no puede estar vacío"}), 400
+            proveedor.rubro = rubro
+        
+        if direccion is not None:
+            if not direccion:
+                return jsonify({"msg": "Dirección no puede estar vacío"}), 400
+            proveedor.direccion = direccion
+
+        if cuenta_corriente is not None:
+            proveedor.cuenta_corriente = cuenta_corriente
+
+        if banco is not None:
+            proveedor.banco = banco
 
         proveedor.update()
 
@@ -473,6 +484,16 @@ def proveedores(id = None):
             "data": proveedor.serialize()
         }
         return jsonify(data), 200
+
+    # PERMITE ELIMINAR PROVEEDOR
+    if request.method == 'DELETE':
+        if id:
+            proveedor = Proveedor.query.get(id)
+            if proveedor:
+                proveedor.delete()
+                return jsonify({"msg": f"Proveedor <{proveedor.nombre}> eliminado exitosamente."}),200
+            else:
+                return jsonify({"msg": "Proveedor no se encuentra registrado."}),400
 
 @app.route('/api/productos', methods = ['GET', "POST"])
 @app.route("/api/productos/<int:id>", methods=["GET", "PUT", "DELETE"])

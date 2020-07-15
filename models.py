@@ -273,7 +273,8 @@ class Proveedor(db.Model):
     def update(self):
         db.session.commit()
     def delete(self):
-        pass
+        db.session.delete(self)
+        db.session.commit()
 
 class Categoria(db.Model):
     __tablename__ = "categorias"
