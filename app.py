@@ -718,7 +718,7 @@ def cuadratura_caja(id = None):
 
         cuadratura_caja.save()
        
-        return jsonify({"msg": "Producto creado exitosamente"}), 201
+        return jsonify({"msg": "cuadratura de caja creada exitosamente"}), 201
 
 @app.route('/api/facturas-compras', methods = ['GET', "POST"])
 @app.route("/api/facturas-compras/<int:id>", methods=["GET"])
