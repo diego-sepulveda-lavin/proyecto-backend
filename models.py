@@ -239,7 +239,8 @@ class Documento_Venta(db.Model):
         }
 
     def save(self):
-        pass
+        db.session.add(self)
+        db.session.commit()
     def update(self):
         pass
     def delete(self):
