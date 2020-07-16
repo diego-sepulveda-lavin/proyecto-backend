@@ -62,7 +62,7 @@ class Usuario(db.Model):
             "email" : self.email,
             #NO DEVOLVER PASSWORD AL FRONT END "password" : self.password,
             "status" : self.status,
-            "fecha_registro" : self.fecha_registro,
+            "fecha_registro" : self.fecha_registro.strftime("%Y-%m-%d"),
             "foto": self.foto,
             "empresa_id" : self.empresa_id,
             
