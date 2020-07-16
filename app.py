@@ -1,4 +1,5 @@
 import os, datetime, time
+from werkzeug.utils import secure_filename
 from flask import Flask, request, jsonify, send_from_directory
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
@@ -239,13 +240,13 @@ def usuarios(id = None):
 
 
         filename = "without-photo.png"
-        print(filename)
         if 'foto' in request.files:
             file = request.files['foto']    
             if file and allowed_images_file(file.filename):
-                timestr = time.strftime("%Y%m%d-%H%M%S")
-                filename = timestr+"-"+filename
-                file.save(os.path.join(app.config['UPLOAD_FOLDER']+"/images", filename))
+                filename = secure_filename(file.filename)
+                #timestr = time.strftime("%Y%m%d-%H%M%S")
+                #filename = timestr+"-"+filename
+                #file.save(os.path.join(app.config['UPLOAD_FOLDER']+"/images", filename))
             else:
                 return jsonify({"msg": "File Not Allowed!"}), 400
         
@@ -257,9 +258,9 @@ def usuarios(id = None):
         usuario.email = data["email"]
         usuario.password = bcrypt.generate_password_hash(data["password"])
         usuario.empresa_id = data["empresa_id"]
-        usuario.foto = filename
         usuario.save()
         usuario.codigo = usuario.generaCodigo()
+        usuario.foto = f"{usuario.generaCodigo()}-{filename}"
         usuario.update()
 
         return jsonify(usuario.serialize()),200
@@ -271,13 +272,13 @@ def usuarios(id = None):
             if not usuario_actualizar:
                 return jsonify({"msg": "Usuario no se encuentra registrado"}),401
             
-            nombre = request.json.get("nombre", None)
-            apellido = request.json.get("apellido", None)
-            rut = request.json.get("rut", None)
-            rol = request.json.get("rol", None)
-            email = request.json.get("email", None)
-            password = request.json.get("password", None)
-            status = request.json.get("status", None)
+            nombre = request.form.get("nombre", None)
+            apellido = request.form.get("apellido", None)
+            rut = request.form.get("rut", None)
+            rol = request.form.get("rol", None)
+            email = request.form.get("email", None)
+            password = request.form.get("password", None)
+            status = request.form.get("status", None)
         
             rut_ocupado = Usuario.query.filter_by(rut = rut)
             if rut_ocupado and rut is not None:
@@ -319,7 +320,20 @@ def usuarios(id = None):
                 if status != False and status != True:
                     return jsonify("Status debe ser true o false"),401
                 usuario_actualizar.status = status
+
+
+            #filename = "without-photo.png"
+            if 'foto' in request.files:
+                file = request.files['foto']    
+                if file and allowed_images_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    #timestr = time.strftime("%Y%m%d-%H%M%S")
+                    #filename = timestr+"-"+filename
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER']+"/images", filename))
+                else:
+                    return jsonify({"msg": "File Not Allowed!"}), 400
             
+            usuario_actualizar.foto =f"{usuario_actualizar.codigo}-{filename}" 
             usuario_actualizar.update()
             data = {
                 "msg": "Usuario Modificado",

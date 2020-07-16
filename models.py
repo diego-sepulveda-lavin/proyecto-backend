@@ -77,7 +77,7 @@ class Usuario(db.Model):
         db.session.delete(self)
         db.session.commit()
     def generaCodigo(self):
-        return f"usr-{self.id}"
+        return f"usr{self.id}"
         
 
 class Entrada_Inventario(db.Model):
