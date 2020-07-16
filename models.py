@@ -60,7 +60,7 @@ class Usuario(db.Model):
             "rut" : self.rut,
             "rol" : self.rol,
             "email" : self.email,
-            "password" : self.password,
+            #NO DEVOLVER PASSWORD AL FRONT END "password" : self.password,
             "status" : self.status,
             "fecha_registro" : self.fecha_registro,
             "foto": self.foto,

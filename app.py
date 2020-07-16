@@ -1,5 +1,4 @@
-import os, time
-from datetime import datetime
+import os, datetime, time
 from flask import Flask, request, jsonify, send_from_directory
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
@@ -12,6 +11,7 @@ from config import Development
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
 
 app = Flask(__name__)
+app.config['JSON_SORT_KEYS'] = False
 app.url_map.strict_slashes = False
 app.config.from_object(Development)
 db.init_app(app)
@@ -49,29 +49,31 @@ def home():
 
 @app.route("/api/login/", methods = ["POST"])
 def login():
-    rut = request.json.get("rut", None)
+    email = request.json.get("email", None)
     password = request.json.get("password", None)
 
-    if not rut:
-        return jsonify({"msg": "Rut no puede estar vacío"}),400
+    if not email:
+        return jsonify({"msg": "Email no puede estar vacío"}),400
     if not password:
-        return jsonify({"msg": "Password no puede estar vacío"}),400
+        return jsonify({"msg": "Contraseña no puede estar vacía"}),400
 
-    userR = Usuario.query.filter_by(rut = rut).first()
-    if not userR:
-        return jsonify({"msg":"Rut o contraseña inválido."}),401
-    if not bcrypt.check_password_hash(userR.password, password):
-        return jsonify({"msg":"Rut o contraseña inválido."}), 401
+    userE = Usuario.query.filter_by(email = email).first()
+    #Revisa si existe el usuario en DB y compara contraseñas
+    if not userE or not bcrypt.check_password_hash(userE.password, password):
+        return jsonify({"msg":"Email o contraseña inválidos"}),401
+    
 
-    expires = datetime.timedelta(hour=24)
-    access_token = create_access_token(identity=userR.rut, expires_delta=expires)
+    expires = datetime.timedelta(days=1)
+    access_token = create_access_token(identity=userE.email, expires_delta=expires)
 
     data = {
         "access_token": access_token,
-        "user": userR.serialize()
+        "user": userE.serialize()
     }
 
     return jsonify(data), 200
+
+
 
 @app.route('/api/empresas', methods = ['GET', "POST"])
 @app.route('/api/empresas/<int:id>', methods = ['GET', "PUT","DELETE"])
