@@ -526,9 +526,18 @@ def productos(id=None):
         if not data["categoria_id"]:
             return jsonify({"msg" : "Categoría del producto nuevo no puede estar vacio"}), 401
 
-        producto = Producto.query.filter_by(descripcion = data["descripcion"]).first()
-        if producto:
-            return jsonify({"msg" : "Producto ya existe"})
+        producto_cb = Producto.query.filter_by(codigo_barra = data["codigo_barra"]).first()
+        producto_desc = Producto.query.filter_by(descripcion = data["descripcion"]).first()
+        producto_sku = Producto.query.filter_by(sku = data["sku"]).first()
+
+        if producto_cb:
+            return jsonify({"msg" : "Codigo de barra ya existe"})
+        
+        if producto_desc:
+            return jsonify({"msg" : "Descripción de Producto ya existe"})
+        
+        if producto_sku:
+            return jsonify({"msg" : "SKU ya existe"})
         
         producto = Producto()
         producto.sku = data["sku"]
@@ -761,8 +770,8 @@ def proveedores(id = None):
         else:
             return jsonify({"msg": "Proveedor no se encuentra registrado."}),400
 
-@app.route('/api/categoria', methods=['GET'])
-@app.route('/api/categoria/<int:id>', methods=["GET", "POST", "PUT", "DELETE"])
+@app.route('/api/categorias', methods=['GET', "POST"])
+@app.route('/api/categorias/<int:id>', methods=["GET", "PUT", "DELETE"])
 def categorias(id = None):
     if request.method == 'GET':
         if not id:
@@ -810,8 +819,8 @@ def categorias(id = None):
             data = {"msg": "Categoria Modificada", "user": categoria_update.serialize()}
             return jsonify(data),200
 
-@app.route("/api/cuadratura_caja", methods = ['GET', 'POST'])
-@app.route("/api/cuadratura_caja/<int:id>", methods = ['GET'])
+@app.route("/api/cuadratura-caja", methods = ['GET', 'POST'])
+@app.route("/api/cuadratura-caja/<int:id>", methods = ['GET'])
 def cuadratura_caja(id = None):
     if request.method == 'GET':
         if not id:
@@ -821,7 +830,7 @@ def cuadratura_caja(id = None):
 
         if id:
             cuadratura_caja = Cuadratura_Caja.query.get(id)
-            if proveedor:
+            if cuadratura_caja:
                 return jsonify(cuadratura_caja.serialize()), 200
             else:
                 return jsonify({"msg": "id asociado a cuadratura de caja no encontrada"}), 400
