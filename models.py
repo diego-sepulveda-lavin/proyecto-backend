@@ -44,6 +44,7 @@ class Usuario(db.Model):
     password = db.Column(db.String(100), nullable = False)
     status = db.Column(db.Boolean, default = True, nullable = False)
     fecha_registro = db.Column(db.DateTime, nullable = False, default = datetime.now) #hora local
+    foto = db.Column(db.String(100), default='without-photo.png')
     empresa_id = db.Column(db.Integer, db.ForeignKey("empresas.id"), nullable = False)
     entradas = db.relationship('Entrada_Inventario', backref = 'usuario', lazy = True)
     salidas = db.relationship('Salida_Inventario', backref = 'usuario', lazy = True)
@@ -62,6 +63,7 @@ class Usuario(db.Model):
             "password" : self.password,
             "status" : self.status,
             "fecha_registro" : self.fecha_registro,
+            "foto": self.foto,
             "empresa_id" : self.empresa_id,
             
         }

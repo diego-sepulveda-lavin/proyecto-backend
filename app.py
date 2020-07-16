@@ -1,5 +1,6 @@
+import os, time
 from datetime import datetime
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
@@ -21,6 +22,8 @@ jwt = JWTManager(app)
 manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
+ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
+
 # Using the expired_token_loader decorator, we will now call
 # this function whenever an expired but otherwise valid access
 # token attempts to access an endpoint
@@ -30,6 +33,15 @@ def my_expired_token_callback(expired_token):
     return jsonify({
         'msg': 'The {} token has expired. Please Login Again'.format(token_type)
     }), 401
+
+def allowed_images_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS_IMG
+
+@app.route('/api/images/<filename>')
+def uploaded_file(filename):
+    #Se le indica en que carpeta guardará la foto, en este caso "static/images" donde static se definio en el config.py en la variable upload_folder
+    return send_from_directory(app.config['UPLOAD_FOLDER']+"/images", filename)
 
 @app.route('/')
 def home():
@@ -200,7 +212,7 @@ def usuarios(id = None):
 
     ### Insertar Usuario ###
     if request.method == "POST":
-        data = request.get_json()
+        data = request.form
         if not data["nombre"]:
             return jsonify({"msg":"Nombre no puede estar vacío"}),401
         if not data["apellido"]:
@@ -222,6 +234,18 @@ def usuarios(id = None):
         email_ocupado= Usuario.query.filter_by(email = data["email"]).first()
         if email_ocupado:
             return jsonify({"msg": "Email ya se encuentra registrado."}),401
+
+
+        filename = "without-photo.png"
+        print(filename)
+        if 'foto' in request.files:
+            file = request.files['foto']    
+            if file and allowed_images_file(file.filename):
+                timestr = time.strftime("%Y%m%d-%H%M%S")
+                filename = timestr+"-"+filename
+                file.save(os.path.join(app.config['UPLOAD_FOLDER']+"/images", filename))
+            else:
+                return jsonify({"msg": "File Not Allowed!"}), 400
         
         usuario = Usuario()
         usuario.nombre = data["nombre"]
@@ -230,7 +254,8 @@ def usuarios(id = None):
         usuario.rol = data["rol"]
         usuario.email = data["email"]
         usuario.password = bcrypt.generate_password_hash(data["password"])
-        usuario.empresa_id = data["empresa_id"] 
+        usuario.empresa_id = data["empresa_id"]
+        usuario.foto = filename
         usuario.save()
         usuario.codigo = usuario.generaCodigo()
         usuario.update()
