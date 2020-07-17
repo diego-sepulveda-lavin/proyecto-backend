@@ -10,6 +10,10 @@ from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
+<<<<<<< HEAD
+aaa
+=======
+>>>>>>> dev
 
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
