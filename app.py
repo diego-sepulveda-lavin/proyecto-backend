@@ -40,13 +40,14 @@ def allowed_images_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS_IMG
 
 @app.route('/api/images/<filename>')
+@jwt_required
 def uploaded_file(filename):
+
+    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
+    current_user = get_jwt_identity()
+
     #Se le indica en que carpeta guardará la foto, en este caso "static/images" donde static se definio en el config.py en la variable upload_folder
     return send_from_directory(app.config['UPLOAD_FOLDER']+"/images", filename)
-
-@app.route('/')
-def home():
-    return 'Hola mundo'
 
 @app.route("/api/login/", methods = ["POST"])
 def login():
@@ -58,28 +59,29 @@ def login():
     if not password:
         return jsonify({"msg": "Contraseña no puede estar vacía"}),400
 
-    userE = Usuario.query.filter_by(email = email).first()
+    user = Usuario.query.filter_by(email = email).first()
     #Revisa si existe el usuario en DB y compara contraseñas
-    if not userE or not bcrypt.check_password_hash(userE.password, password):
+    if not user or not bcrypt.check_password_hash(user.password, password):
         return jsonify({"msg":"Email o contraseña inválidos"}),401
     
-
     expires = datetime.timedelta(days=1)
-    access_token = create_access_token(identity=userE.email, expires_delta=expires)
+    access_token = create_access_token(identity=user.email, expires_delta=expires)
 
     data = {
         "access_token": access_token,
-        "user": userE.serialize()
+        "user": user.serialize()
     }
 
     return jsonify(data), 200
 
-
-
 @app.route('/api/empresas', methods = ['GET', "POST"])
 @app.route('/api/empresas/<int:id>', methods = ['GET', "PUT","DELETE"])
-#@jwt_required
-def empresas(id=None):
+@jwt_required
+def empresas(id = None):
+
+    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
+    current_user = get_jwt_identity()
+            
     ### Ver Empresas ###
     if request.method == 'GET':
         if not id:
@@ -183,10 +185,14 @@ def empresas(id=None):
             }
             return jsonify(data),200
 
-
 @app.route("/api/usuarios", methods = ["GET","POST"])
 @app.route("/api/usuarios/<int:id>", methods = ["GET","DELETE", "PUT"])
+@jwt_required
 def usuarios(id = None):
+
+    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
+    current_user = get_jwt_identity()
+
     ### Ver Usuarios ###
     if request.method == "GET":
         if id is None:
@@ -341,10 +347,14 @@ def usuarios(id = None):
             }
             return jsonify(data),200
  
-
 @app.route("/api/entradas-inventario", methods =["GET", "POST"])
 @app.route("/api/entradas-inventario/<int:id>", methods=["GET", "PUT"])
+@jwt_required
 def entrada_inventario(id = None):
+
+    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
+    current_user = get_jwt_identity()
+
     ### VER TODAS LAS ENTRADAS DE INVENTARIO ###
     if request.method =="GET":        
         if id is None:
@@ -405,7 +415,11 @@ def entrada_inventario(id = None):
 
 @app.route('/api/salidas-inventario', methods = ['GET', "POST"])
 @app.route("/api/salidas-inventario/<int:id>", methods=["GET", "PUT"])
-def salidas_inventario(id=None):
+@jwt_required
+def salidas_inventario(id = None):
+
+    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
+    current_user = get_jwt_identity()
 
     # Devuelve listado de todas las salidas de inventario por ventas
     if request.method == 'GET':
@@ -466,7 +480,12 @@ def salidas_inventario(id=None):
 
 @app.route('/api/facturas-compras', methods = ['GET', "POST"])
 @app.route("/api/facturas-compras/<int:id>", methods=["GET"])
-def facturas_compras(id=None):
+@jwt_required
+def facturas_compras(id = None):
+
+    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
+    current_user = get_jwt_identity()
+
     # Devuelve todas las facturas registradas
     if request.method == 'GET':
         if id is None:
@@ -532,7 +551,12 @@ def facturas_compras(id=None):
 
 @app.route('/api/productos', methods = ['GET', "POST"])
 @app.route("/api/productos/<int:id>", methods=["GET", "PUT", "DELETE"])
-def productos(id=None):
+@jwt_required
+def productos(id = None):
+
+    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
+    current_user = get_jwt_identity()
+
     # Devuelve listado de todos los productos
     if request.method == 'GET':
         if id is None:
@@ -617,7 +641,12 @@ def productos(id=None):
 
 @app.route("/api/documentos-venta", methods = ['GET', 'POST'])
 @app.route("/api/documentos-venta/<int:id>", methods = ['GET'])
+@jwt_required
 def documentos_venta(id = None):
+
+    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
+    current_user = get_jwt_identity()
+
     if request.method == 'GET':
         # DEVUELVE LISTADO CON TODOS LOS DOCUMENTOS DE VENTA
         if not id:
@@ -683,7 +712,11 @@ def documentos_venta(id = None):
 
 @app.route("/api/proveedores", methods = ['GET', 'POST'])
 @app.route("/api/proveedores/<int:id>", methods = ['GET', 'PUT', 'DELETE'])
+@jwt_required
 def proveedores(id = None):
+
+    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
+    current_user = get_jwt_identity()
     
     if request.method == 'GET':
         # DEVUELVE LISTADO CON TODOS LOS PROVEEDORES
@@ -745,8 +778,7 @@ def proveedores(id = None):
         proveedor = Proveedor.query.get(id)
         if not proveedor:
             return jsonify({"msg": "Empresa no se encuentra en el sistema"}), 400
-        
-        
+            
         nombre = request.json.get("nombre", None)
         rut = request.json.get("rut", None)
         razon_social = request.json.get("razon_social", None)
@@ -813,7 +845,12 @@ def proveedores(id = None):
 
 @app.route('/api/categorias', methods=['GET', "POST"])
 @app.route('/api/categorias/<int:id>', methods=["GET", "PUT", "DELETE"])
+@jwt_required
 def categorias(id = None):
+
+    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
+    current_user = get_jwt_identity()
+
     if request.method == 'GET':
         if not id:
             categorias = Categoria.query.all()
@@ -862,7 +899,12 @@ def categorias(id = None):
 
 @app.route("/api/cuadratura-caja", methods = ['GET', 'POST'])
 @app.route("/api/cuadratura-caja/<int:id>", methods = ['GET'])
+@jwt_required
 def cuadratura_caja(id = None):
+
+    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
+    current_user = get_jwt_identity()
+
     if request.method == 'GET':
         if not id:
             cuadraturas_cajas = Cuadratura_Caja.query.all()
