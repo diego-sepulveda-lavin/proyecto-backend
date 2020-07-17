@@ -10,10 +10,6 @@ from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura
 from config import Development
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
-<<<<<<< HEAD
-aaa
-=======
->>>>>>> dev
 
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
@@ -47,6 +43,7 @@ def allowed_images_file(filename):
 def uploaded_file(filename):
     #Se le indica en que carpeta guardará la foto, en este caso "static/images" donde static se definio en el config.py en la variable upload_folder
     return send_from_directory(app.config['UPLOAD_FOLDER']+"/images", filename)
+
 
 @app.route('/')
 def home():
@@ -218,27 +215,35 @@ def usuarios(id = None):
                 return jsonify({"msg": "Usuario no se encuentra registrado."}),401
 
     ### Insertar Usuario ###
-    if request.method == "POST":
-        data = request.form
-        if not data["nombre"]:
-            return jsonify({"msg":"Nombre no puede estar vacío"}),401
-        if not data["apellido"]:
-            return jsonify({"msg":"Apellido no puede estar vacío"}),401
-        if not data["rut"]:
-            return jsonify({"msg":"Rut no puede estar vacío"}),401
-        if not data["rol"]:
-            return jsonify({"msg":"Rol no puede estar vacío"}),401
-        if not data["email"]:
-            return jsonify({"msg":"Email no puede estar vacío"}),401
-        if not data["password"]:
-            return jsonify({"msg":"Password no puede estar vacío"}),401
-        if not data["empresa_id"]:
-            return jsonify({"msg":"Empresa_id no puede estar vacío"}),401
+    if request.method == "POST":        
+        nombre = request.form.get("nombre", None)
+        apellido = request.form.get("apellido", None)
+        rut = request.form.get("rut", None)
+        rol = request.form.get("rol", None)
+        email = request.form.get("email", None)
+        password = request.form.get("password", None)
+        foto = request.form.get("foto", None)
         
-        rut_ocupado = Usuario.query.filter_by(rut = data["rut"]).first()
+
+        if not nombre:
+            return jsonify({"msg":"Nombre no puede estar vacío"}),401
+        if not apellido:
+            return jsonify({"msg":"Apellido no puede estar vacío"}),401
+        if not rut:
+            return jsonify({"msg":"Rut no puede estar vacío"}),401
+        if not rol:
+            return jsonify({"msg":"Rol no puede estar vacío"}),401
+        if not email:
+            return jsonify({"msg":"Email no puede estar vacío"}),401
+        if not password:
+            return jsonify({"msg":"Password no puede estar vacío"}),401
+        #if not data["empresa_id"]:
+        #    return jsonify({"msg":"Empresa_id no puede estar vacío"}),401
+        
+        rut_ocupado = Usuario.query.filter_by(rut = rut).first()
         if rut_ocupado:
             return jsonify({"msg": "Rut ya se encuentra registrado."}),401
-        email_ocupado= Usuario.query.filter_by(email = data["email"]).first()
+        email_ocupado= Usuario.query.filter_by(email = email).first()
         if email_ocupado:
             return jsonify({"msg": "Email ya se encuentra registrado."}),401
 
@@ -250,18 +255,18 @@ def usuarios(id = None):
                 filename = secure_filename(file.filename)
                 #timestr = time.strftime("%Y%m%d-%H%M%S")
                 #filename = timestr+"-"+filename
-                #file.save(os.path.join(app.config['UPLOAD_FOLDER']+"/images", filename))
+                file.save(os.path.join(app.config['UPLOAD_FOLDER']+"/images", filename))
             else:
                 return jsonify({"msg": "File Not Allowed!"}), 400
         
         usuario = Usuario()
-        usuario.nombre = data["nombre"]
-        usuario.apellido = data["apellido"]
-        usuario.rut = data["rut"]
-        usuario.rol = data["rol"]
-        usuario.email = data["email"]
-        usuario.password = bcrypt.generate_password_hash(data["password"])
-        usuario.empresa_id = data["empresa_id"]
+        usuario.nombre = nombre
+        usuario.apellido = apellido
+        usuario.rut = rut
+        usuario.rol = rol
+        usuario.email = email
+        usuario.password = bcrypt.generate_password_hash(password).decode("utf-8")
+        usuario.empresa_id = 1 
         usuario.save()
         usuario.codigo = usuario.generaCodigo()
         usuario.foto = f"{usuario.generaCodigo()}-{filename}"
