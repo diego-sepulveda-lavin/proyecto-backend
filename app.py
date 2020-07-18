@@ -177,13 +177,8 @@ def empresas(id = None):
                     return jsonify({"msg": "Rubro no puede ir vacío"}),401
                 empresaActualizar.rubro = rubro
 
-
-            empresaActualizar.update()
-            data = {
-                "msg": "Empresa Modificada",
-                "empresa": empresaActualizar.serialize()
-            }
-            return jsonify(data),200
+            empresaActualizar.update()   
+            return jsonify(empresaActualizar.serialize()),200
 
 @app.route("/api/usuarios", methods = ["GET","POST"])
 @app.route("/api/usuarios/<int:id>", methods = ["GET","DELETE", "PUT"])
