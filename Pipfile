@@ -14,6 +14,8 @@ flask-bcrypt = "*"
 flask-cors = "*"
 flask-jwt-extended = "*"
 pymysql = "*"
+python-dotenv = "*"
+flask-mail = "*"
 
 [scripts]
 start = "python app.py runserver"

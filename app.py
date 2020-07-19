@@ -6,6 +6,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
+from flask_mail import Mail, Message
 from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura_Compra, Entrada_Inventario, Salida_Inventario, Documento_Venta, Cuadratura_Caja
 from config import Development
 
@@ -14,6 +15,16 @@ ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 app.url_map.strict_slashes = False
+
+app.config['SECRET_KEY'] = 'top-secret!'
+app.config['MAIL_SERVER'] = 'smtp.sendgrid.net'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'apikey'
+app.config['MAIL_PASSWORD'] = os.environ.get('SENDGRID_API_KEY')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
+mail = Mail(app)
+
 app.config.from_object(Development)
 db.init_app(app)
 Migrate(app, db)
@@ -38,6 +49,25 @@ def my_expired_token_callback(expired_token):
 def allowed_images_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS_IMG
+
+@app.route('/api/email', methods = ['POST'])
+def email():
+    nombre = request.json.get('nombre', None)
+    email = request.json.get('email', None)
+    consulta = request.json.get('consulta', None)
+
+    if not nombre:
+        return jsonify ({"msg": "Por favor ingresa tu nombre"})
+    if not email:
+        return jsonify ({"msg": "Por favor ingresa tu email"})
+    if not consulta:
+        return jsonify ({"msg": "Por favor ingresa tu constulta"})
+    
+    msg = Message('Consulta desde Formulario Landing Page', recipients=[os.environ.get('MAIL_DEFAULT_RECIPIENT')])
+    msg.body = f"Nombre: {nombre}\nEmail de contacto: {email}\nConsulta: {consulta}"
+    mail.send(msg)
+    return jsonify ({"msg": "Muchas gracias por contactarte con nosotros"}), 200
+    
 
 @app.route('/api/images/<filename>')
 @jwt_required
