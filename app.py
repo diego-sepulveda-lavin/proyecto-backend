@@ -283,11 +283,14 @@ def usuarios(id = None):
             file = request.files['foto']    
             if file and allowed_images_file(file.filename):
                 filename = secure_filename(file.filename)
-                #timestr = time.strftime("%Y%m%d-%H%M%S")
-                #filename = timestr+"-"+filename
+                timestr = time.strftime("%Y%m%d-%H%M%S")
+                filename = timestr+"-"+filename
+                filename = filename
                 file.save(os.path.join(app.config['UPLOAD_FOLDER']+"/images", filename))
             else:
-                return jsonify({"msg": "File Not Allowed!"}), 400
+                return jsonify({"msg": "File Not Allowed!"}), 400 
+
+        
         
         usuario = Usuario()
         usuario.nombre = nombre
@@ -297,9 +300,9 @@ def usuarios(id = None):
         usuario.email = email
         usuario.password = bcrypt.generate_password_hash(password).decode("utf-8")
         usuario.empresa_id = 1 
+        usuario.foto = filename
         usuario.save()
         usuario.codigo = usuario.generaCodigo()
-        usuario.foto = f"{usuario.generaCodigo()}-{filename}"
         usuario.update()
 
         return jsonify(usuario.serialize()),200
@@ -327,34 +330,35 @@ def usuarios(id = None):
                 return jsonify({"msg": "Correo ya se encuentra registrado."}),401
 
             if nombre is not None:
-                if not nombre:
+                if nombre == "":
                     return jsonify({"msg": "Nombre no puede ir vacío."}),401
                 usuario_actualizar.nombre = nombre
 
             if apellido is not None:
-                if not apellido:
+                if apellido == "":
                     return jsonify({"msg": "Apellido no puede ir vacío."}),401
                 usuario_actualizar.apellido = apellido 
                 
             if rut is not None:
-                if not rut:
+                if rut == "":
                     return jsonify({"msg": "Rut no puede ir vacío."}),401
                 usuario_actualizar.rut = rut
 
             if rol is not None:
-                if not rol:
+                if rol == "":
                     return jsonify({"msg": "Rol no puede ir vacío."}),401
                 usuario_actualizar.rol = rol
 
             if email is not None:
-                if not email:
+                if email == "":
                     return jsonify({"msg": "Email no puede ir vacío"}),401
                 usuario_actualizar.email = email
 
+            #print(password.items())
             if password is not None:
-                if not password:
+                if password == "":
                     return jsonify({"msg": "Password no puede ir vacío."}),401
-                usuario_actualizar.password = password
+                usuario_actualizar.password = bcrypt.generate_password_hash(password).decode("utf-8")
             if status is not None:
                 if status != False and status != True:
                     return jsonify("Status debe ser true o false"),401
@@ -372,7 +376,7 @@ def usuarios(id = None):
                 else:
                     return jsonify({"msg": "File Not Allowed!"}), 400
             
-            usuario_actualizar.foto =f"{usuario_actualizar.codigo}-{filename}" 
+            #usuario_actualizar.foto =f"{usuario_actualizar.codigo}-{filename}" 
             usuario_actualizar.update()
             
             return jsonify(usuario_actualizar.serialize()),200
