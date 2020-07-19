@@ -57,11 +57,11 @@ def email():
     consulta = request.json.get('consulta', None)
 
     if not nombre:
-        return jsonify ({"msg": "Por favor ingresa tu nombre"})
+        return jsonify ({"msg": "Por favor ingresa tu nombre"}), 400
     if not email:
-        return jsonify ({"msg": "Por favor ingresa tu email"})
+        return jsonify ({"msg": "Por favor ingresa tu email"}), 400
     if not consulta:
-        return jsonify ({"msg": "Por favor ingresa tu constulta"})
+        return jsonify ({"msg": "Por favor ingresa tu constulta"}), 400
     
     msg = Message('Consulta desde Formulario Landing Page', recipients=[os.environ.get('MAIL_DEFAULT_RECIPIENT')])
     msg.body = f"Nombre: {nombre}\nEmail de contacto: {email}\nConsulta: {consulta}"
