@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
 from flask_mail import Mail, Message
 from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura_Compra, Entrada_Inventario, Salida_Inventario, Documento_Venta, Cuadratura_Caja
@@ -319,10 +319,10 @@ def usuarios(id = None):
             password = request.form.get("password", None)
             status = request.form.get("status", None)
         
-            rut_ocupado = Usuario.query.filter_by(rut = rut)
+            rut_ocupado = Usuario.query.filter_by(rut = rut).first()
             if rut_ocupado and rut is not None:
                 return jsonify({"msg": "Rut ya se encuentra registrado."}),401
-            email_ocupado = Usuario.query.filter_by(email = email)
+            email_ocupado = Usuario.query.filter_by(email = email).first()
             if email_ocupado and email is not None:
                 return jsonify({"msg": "Correo ya se encuentra registrado."}),401
 
@@ -374,11 +374,8 @@ def usuarios(id = None):
             
             usuario_actualizar.foto =f"{usuario_actualizar.codigo}-{filename}" 
             usuario_actualizar.update()
-            data = {
-                "msg": "Usuario Modificado",
-                "usuario": usuario_actualizar.serialize()
-            }
-            return jsonify(data),200
+            
+            return jsonify(usuario_actualizar.serialize()),200
  
 @app.route("/api/entradas-inventario", methods =["GET", "POST"])
 @app.route("/api/entradas-inventario/<int:id>", methods=["GET", "PUT"])
