@@ -323,10 +323,11 @@ def usuarios(id = None):
             status = request.form.get("status", None)
         
             rut_ocupado = Usuario.query.filter_by(rut = rut).first()
-            if rut_ocupado and rut is not None:
+            if rut_ocupado and rut_ocupado.id != id:
                 return jsonify({"msg": "Rut ya se encuentra registrado."}),401
+
             email_ocupado = Usuario.query.filter_by(email = email).first()
-            if email_ocupado and email is not None:
+            if email_ocupado and email_ocupado.id != id:
                 return jsonify({"msg": "Correo ya se encuentra registrado."}),401
 
             if nombre is not None:
