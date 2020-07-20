@@ -106,7 +106,9 @@ def empresas(id = None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
     current_user = get_jwt_identity()
-            
+    print(current_user)
+    probando = Usuario.query.filter_by(email = current_user).first()
+    print(probando.nombre)
     ### Ver Empresas ###
     if request.method == 'GET':
         if not id:
