@@ -621,20 +621,17 @@ def productos(id = None):
             return jsonify({"msg" : "Unidad de Entrega del producto nuevo no puede estar vacio"}), 401
         
         if not data["categoria_id"]:
-            return jsonify({"msg" : "Categoría del producto nuevo no puede estar vacio"}), 401
+            return jsonify({"msg" : "Seleccione Categoría"}), 401
 
         producto_cb = Producto.query.filter_by(codigo_barra = data["codigo_barra"]).first()
         producto_desc = Producto.query.filter_by(descripcion = data["descripcion"]).first()
         producto_sku = Producto.query.filter_by(sku = data["sku"]).first()
 
         if producto_cb:
-            return jsonify({"msg" : "Codigo de barra ya existe"})
-        
-        if producto_desc:
-            return jsonify({"msg" : "Descripción de Producto ya existe"})
-        
+            return jsonify({"msg" : "Codigo de barra ya existe"}),401
+  
         if producto_sku:
-            return jsonify({"msg" : "SKU ya existe"})
+            return jsonify({"msg" : "SKU ya existe"}),401
         
         producto = Producto()
         producto.sku = data["sku"]
