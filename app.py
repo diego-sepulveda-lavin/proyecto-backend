@@ -642,7 +642,7 @@ def productos(id = None):
         producto.categoria_id = data["categoria_id"] #revisar porque es una FK
         producto.save()
        
-        return jsonify({"msg": "Producto creado exitosamente"}), 201
+        return jsonify(producto.serialize()), 200
 
     # Actualización de un producto
     if request.method == 'PUT':
