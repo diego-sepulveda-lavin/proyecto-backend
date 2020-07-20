@@ -70,12 +70,7 @@ def email():
     
 
 @app.route('/api/images/<filename>')
-@jwt_required
 def uploaded_file(filename):
-
-    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-    current_user = get_jwt_identity()
-
     #Se le indica en que carpeta guardará la foto, en este caso "static/images" donde static se definio en el config.py en la variable upload_folder
     return send_from_directory(app.config['UPLOAD_FOLDER']+"/images", filename)
 
@@ -371,13 +366,13 @@ def usuarios(id = None):
                 file = request.files['foto']    
                 if file and allowed_images_file(file.filename):
                     filename = secure_filename(file.filename)
-                    #timestr = time.strftime("%Y%m%d-%H%M%S")
-                    #filename = timestr+"-"+filename
+                    timestr = time.strftime("%Y%m%d-%H%M%S")
+                    filename = timestr+"-"+filename
                     file.save(os.path.join(app.config['UPLOAD_FOLDER']+"/images", filename))
+                    usuario_actualizar.foto = filename
                 else:
                     return jsonify({"msg": "File Not Allowed!"}), 400
             
-            #usuario_actualizar.foto =f"{usuario_actualizar.codigo}-{filename}" 
             usuario_actualizar.update()
             
             return jsonify(usuario_actualizar.serialize()),200
