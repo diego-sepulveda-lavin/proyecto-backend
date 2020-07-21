@@ -43,7 +43,7 @@ ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
 def my_expired_token_callback(expired_token):
     token_type = expired_token['type']
     return jsonify({
-        'msg': 'The {} token has expired. Please Login Again'.format(token_type)
+        'msg': 'La sesión ha caducado, por favor Logearse.'.format(token_type)
     }), 401
 
 def allowed_images_file(filename):
