@@ -909,20 +909,20 @@ def categorias(id = None):
     
     if request.method == 'PUT':
         
-            nombre = request.json.get("nombre", None)
-            
-            if not nombre:
-                return jsonify({"msg": "Categoria no puede estar vacío"}),401
-                        
-            categoria_update = Categoria.query.get(id)
-            if not categoria_update:
-                return jsonify({"msg": "Categoria no se encuentra en el sistema"}),400
-           
-            categoria_update.nombre = nombre
+        nombre = request.json.get("nombre", None)
+        
+        if not nombre:
+            return jsonify({"msg": "Categoria no puede estar vacío"}),401
                     
-            categoria_update.update()
-            data = {"msg": "Categoria Modificada", "user": categoria_update.serialize()}
-            return jsonify(data),200
+        categoria_update = Categoria.query.get(id)
+        if not categoria_update:
+            return jsonify({"msg": "Categoria no se encuentra en el sistema"}),400
+        
+        categoria_update.nombre = nombre
+                
+        categoria_update.update()
+        data = {"msg": "Categoria Modificada", "user": categoria_update.serialize()}
+        return jsonify(data),200
 
 @app.route("/api/cuadratura-caja", methods = ['GET', 'POST'])
 @app.route("/api/cuadratura-caja/<int:id>", methods = ['GET'])
