@@ -937,8 +937,8 @@ def categorias(id = None):
             categoria_update.nombre = nombre
                     
             categoria_update.update()
-            data = {"msg": "Categoria Modificada", "user": categoria_update.serialize()}
-            return jsonify(data),200
+           
+            return jsonify(categoria_update.serialize()),200
 
 @app.route("/api/cuadratura-caja", methods = ['GET', 'POST'])
 @app.route("/api/cuadratura-caja/<int:id>", methods = ['GET'])
