@@ -318,6 +318,14 @@ def usuarios(id = None):
             password = request.form.get("password", None)
             status = request.form.get("status", None)
         
+            if status == "true":
+                status = True
+            elif status == "false":
+                status = False
+
+            print(status)
+            print(type(status))
+           
             rut_ocupado = Usuario.query.filter_by(rut = rut).first()
             if rut_ocupado and rut_ocupado.id != id:
                 return jsonify({"msg": "Rut ya se encuentra registrado."}),401
