@@ -176,10 +176,11 @@ def empresas(id = None):
             rubro = request.json.get("rubro", None)
 
             rutOcupado = Empresa.query.filter_by(rut = rut).first()
-            if rutOcupado and rut is not None:
+            if rutOcupado and rutOcupado.id != id:
                 return jsonify({"msg": "Rut ya se encuentra registrado."}),401
+
             razonSocialOcupado = Empresa.query.filter_by(razon_social = razon_social).first()
-            if razonSocialOcupado and razon_social is not None:
+            if razonSocialOcupado and razonSocialOcupado != id:
                 return jsonify({"msg" : "Razon social ya se encuentra registrada."}),401
 
             if nombre is not None:
