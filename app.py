@@ -67,6 +67,62 @@ def email():
     msg.body = f"Nombre: {nombre}\nEmail de contacto: {email}\nConsulta: {consulta}"
     mail.send(msg)
     return jsonify ({"msg": "Muchas gracias por contactarte con nosotros"}), 200
+
+@app.route('/api/recuperar-email', methods = ['POST'])
+def recuperar_email():
+    email = request.json.get('email', None)
+
+    if not email:
+        return jsonify({"msg": "Debes ingresar un email"}), 400
+    
+    check_email = Usuario.query.filter_by(email = email).first()
+
+    if not check_email:
+        return jsonify({"msg": "El email ingresado no es correcto"}), 400
+    
+    
+    if check_email:
+        expires = datetime.timedelta(hours=1)
+        access_token = create_access_token(identity=check_email.email, expires_delta=expires)
+        url = "http://localhost:3000/nueva-password/"
+        msg = Message('Email de recuperación de contraseña DSHL', recipients=[email])
+        msg.html = f"""<!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    </head>
+                    <body>
+                        <p>Este correo se autogeneró, debido a que solicitaste un cambio de contraseña</p>
+                        <p>El link contraseña es el siguiente: <a href="{url}{access_token}">Click aqui</a></p>
+                    </body>
+                    </html>"""
+        mail.send(msg)
+
+        return jsonify({"msg": "Se ha enviado un correo para recuperar la contraseña"}), 200
+
+@app.route('/api/nueva-password/', methods = ['PUT'])
+@jwt_required
+def nueva_password():
+    
+    current_user = get_jwt_identity()
+    password = request.json.get('password', None)
+    repassword = request.json.get('repassword', None)
+
+    if not password or not repassword:
+        return jsonify({"msg": "Los campos no pueden estar vacios"}), 400
+    
+    if len(password) < 6:
+        return jsonify({"msg": "Contraseña debe contener más de 5 caracteres"}), 400
+
+    if password != repassword:
+        return jsonify({"msg": "Ambas contraseñas deben ser iguales"}), 400
+    
+    usuario = Usuario.query.filter_by(email = current_user).first()
+    usuario.password = bcrypt.generate_password_hash(password).decode("utf-8")
+    usuario.update()
+
+    return jsonify({"msg": "Su contraseña ha sido modificada, redireccionando..."}), 200
     
 
 @app.route('/api/images/<filename>')
