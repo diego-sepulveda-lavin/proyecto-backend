@@ -252,26 +252,26 @@ def usuarios(id = None):
         
 
         if not nombre:
-            return jsonify({"msg":"Nombre no puede estar vacío"}),401
+            return jsonify({"msg":"Nombre no puede estar vacío"}), 401
         if not apellido:
-            return jsonify({"msg":"Apellido no puede estar vacío"}),401
+            return jsonify({"msg":"Apellido no puede estar vacío"}), 401
         if not rut:
-            return jsonify({"msg":"Rut no puede estar vacío"}),401
+            return jsonify({"msg":"Rut no puede estar vacío"}), 401
         if not rol:
-            return jsonify({"msg":"Rol no puede estar vacío"}),401
+            return jsonify({"msg":"Rol no puede estar vacío"}), 401
         if not email:
-            return jsonify({"msg":"Email no puede estar vacío"}),401
+            return jsonify({"msg":"Email no puede estar vacío"}), 401
         if not password:
-            return jsonify({"msg":"Password no puede estar vacío"}),401
+            return jsonify({"msg":"Password no puede estar vacío"}), 401
         #if not data["empresa_id"]:
         #    return jsonify({"msg":"Empresa_id no puede estar vacío"}),401
         
         rut_ocupado = Usuario.query.filter_by(rut = rut).first()
         if rut_ocupado:
-            return jsonify({"msg": "Rut ya se encuentra registrado."}),401
+            return jsonify({"msg": "Rut ya se encuentra registrado."}), 401
         email_ocupado= Usuario.query.filter_by(email = email).first()
         if email_ocupado:
-            return jsonify({"msg": "Email ya se encuentra registrado."}),401
+            return jsonify({"msg": "Email ya se encuentra registrado."}), 401
 
 
         filename = "without-photo.png"
