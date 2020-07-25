@@ -163,6 +163,11 @@ class Factura_Compra(db.Model):
     proveedor_id = db.Column(db.Integer, db.ForeignKey("proveedores.id"), nullable = False)
     entradaI = db.relationship("Entrada_Inventario", backref = "factura" , lazy = True, uselist= False)
 
+
+
+
+
+
     def serialize(self):
         return {
             "id" : self.id,

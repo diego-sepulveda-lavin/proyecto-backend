@@ -642,14 +642,17 @@ def facturas_compras(id = None):
         factura_compra.proveedor_id = data["proveedor_id"]
         factura_compra.save()
         
-        
-        #entrada_inventario = Entrada_Inventario()
-        #entrada_inventario.cantidad=data["cantidad"]
-        #entrada_inventario.precio_costo_unitario = data[""]
-        #entrada_inventario.costo_total = data[""]
-        #entrada_inventario.usuario_id = data["usuario_id"]
-        #entrada_inventario.factura_compra_id = factura_compra.id
-        #entrada_inventario.producto_id =data["producto_id"]
+        #factura_compra.entradas.cantidad o usuario_id
+
+        entrada_inventario = Entrada_Inventario()
+        entrada_inventario.cantidad=data["cantidad"]
+        entrada_inventario.precio_costo_unitario = data[""]
+        entrada_inventario.costo_total = data[""]
+        entrada_inventario.usuario_id = data["usuario_id"]
+        entrada_inventario.factura_compra_id = factura_compra.id
+        entrada_inventario.producto_id =data["producto_id"]
+
+        entrada_inventario.save()
 
 
         return jsonify({"msg": "Factura ingresada exitosamente"}), 201
