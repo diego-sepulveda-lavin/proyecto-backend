@@ -658,7 +658,7 @@ def facturas_compras(id = None):
         
         db.session.commit()
 
-        return jsonify({"msg": "Factura ingresada exitosamente"}), 201
+        return jsonify({"msg": "Factura creada exitosamente."}), 201
 
 @app.route('/api/productos', methods = ['GET', "POST"])
 @app.route("/api/productos/<int:id>", methods=["GET", "PUT", "DELETE"])

@@ -175,6 +175,7 @@ class Factura_Compra(db.Model):
             "monto_otros_impuestos" : self.monto_otros_impuestos,
             "monto_total" : self.monto_total,
             "proveedor_id" : self.proveedor_id,
+            #"entradas_inventario": list(map(lambda entrada_I :self.entradas_I.serialize(), self.entradas_I))
         }
 
     def save(self):
