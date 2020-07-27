@@ -600,8 +600,9 @@ def facturas_compras(id = None):
     # Ingreso de nueva factura
     if request.method == 'POST':
         data = request.get_json()
+        print(data['factura'])
 
-        if not data["folio"]:
+        if not data.factura["folio"]:
             return jsonify({"msg" : "Folio de nueva factura no puede estar vacio"}), 401
         
         if not data["fecha_emision"]:
