@@ -102,7 +102,7 @@ class Entrada_Inventario(db.Model):
             "fecha_registro" : self.fecha_registro,
             "usuario_id" : self.usuario_id,
             "factura_compra_id" : self.factura_compra_id,
-            "producto_id" : self.producto_id
+            "producto" : self.producto.serialize()
         }
 
     def save(self):
@@ -163,8 +163,8 @@ class Factura_Compra(db.Model):
     proveedor_id = db.Column(db.Integer, nullable = False)
     entradas_I = db.relationship("Entrada_Inventario", backref = "factura" , lazy = True)
 
-
     def serialize(self):
+        print(self.entradas_I)
         return {
             "id" : self.id,
             "folio" : self.folio,
@@ -175,7 +175,7 @@ class Factura_Compra(db.Model):
             "monto_otros_impuestos" : self.monto_otros_impuestos,
             "monto_total" : self.monto_total,
             "proveedor_id" : self.proveedor_id,
-            #"entradas_inventario": list(map(lambda entrada_I :self.entradas_I.serialize(), self.entradas_I))
+            "entradas_inventario": list(map(lambda entrada_I : entrada_I.serialize(), self.entradas_I))
         }
 
     def save(self):

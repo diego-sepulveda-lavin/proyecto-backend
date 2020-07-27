@@ -549,7 +549,7 @@ def salidas_inventario(id = None):
         
         if not data["documento_venta_id"]:
             return jsonify({"msg" : "Documento de Venta Id no puede estar vacio"}), 401
- 
+
         salida_inventario = Salida_Inventario()
         salida_inventario.cantidad = data["cantidad"]
         salida_inventario.precio_costo_unitario = data["precio_costo_unitario"]
@@ -558,7 +558,7 @@ def salidas_inventario(id = None):
         salida_inventario.producto_id = data["producto_id"] #revisar porque es una FK
         salida_inventario.documento_venta_id = data["documento_venta_id"] #revisar porque es una FK
         salida_inventario.save()
-       
+
         return jsonify({"msg": "Venta efectuada exitosamente"}), 201
 
     if request.method == 'PUT':
@@ -575,7 +575,7 @@ def salidas_inventario(id = None):
 
 @app.route('/api/facturas-compras', methods = ['GET', "POST"])
 @app.route("/api/facturas-compras/<int:id>", methods=["GET"])
-@jwt_required
+#@jwt_required
 def facturas_compras(id = None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
@@ -641,22 +641,19 @@ def facturas_compras(id = None):
         factura_compra.monto_otros_impuestos = float(data["factura"]["monto_otros_impuestos"])
         factura_compra.monto_total = float(data["factura"]["monto_total"])
         factura_compra.proveedor_id = int(data["factura"]["proveedor_id"])
-        db.session.add(factura_compra)
         
         for entrada_inv in data["factura"]["entradas_inventario"]:
             entrada_inventario = Entrada_Inventario()
-            entrada_inventario.cantidad=entrada_inv["cantidad"]
+            entrada_inventario.cantidad = entrada_inv["cantidad"]
             entrada_inventario.precio_costo_unitario = entrada_inv["precio_costo_unitario"]
             entrada_inventario.costo_total = entrada_inv["costo_total"]
             entrada_inventario.usuario_id = entrada_inv["usuario_id"]
-            entrada_inventario.factura_compra_id = factura_compra.id
-            entrada_inventario.producto_id =entrada_inv["producto_id"]
+            #entrada_inventario.factura_compra_id = factura_compra.id 
+            entrada_inventario.producto_id = entrada_inv["producto_id"]
 
             factura_compra.entradas_I.append(entrada_inventario)
-            #db.session.add(factura_compra)
 
-        
-        db.session.commit()
+        factura_compra.save()
 
         return jsonify({"msg": "Factura creada exitosamente."}), 201
 
