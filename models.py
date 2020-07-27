@@ -90,7 +90,7 @@ class Entrada_Inventario(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable = False)
     factura_compra_id = db.Column(db.Integer, db.ForeignKey("facturas_compras.id"), nullable = False)
     producto_id = db.Column(db.Integer, db.ForeignKey("productos.id"), nullable = False)
-    facturaC = db.relationship("Factura_Compra", backref= "entradas", lazy = True)
+    #facturaC = db.relationship("Factura_Compra", backref= "entradas", lazy = True)
 
 
     def serialize(self):
@@ -160,8 +160,8 @@ class Factura_Compra(db.Model):
     monto_iva = db.Column(db.Float, nullable = False)
     monto_otros_impuestos = db.Column(db.Float, nullable = False)
     monto_total = db.Column(db.Float, nullable = False)
-    proveedor_id = db.Column(db.Integer, db.ForeignKey("proveedores.id"), nullable = False)
-    entradaI = db.relationship("Entrada_Inventario", backref = "factura" , lazy = True, uselist= False)
+    proveedor_id = db.Column(db.Integer, nullable = False)
+    entradas_I = db.relationship("Entrada_Inventario", backref = "factura" , lazy = True)
 
 
     def serialize(self):
@@ -264,7 +264,7 @@ class Proveedor(db.Model):
     direccion = db.Column(db.String(100), nullable = False)
     cuenta_corriente = db.Column(db.String(100), nullable = True)
     banco = db.Column(db.String(100), nullable = True)
-    facturaC = db.relationship("Factura_Compra", foreign_keys="[Factura_Compra.proveedor_id]", backref = "proveedor", lazy = True, uselist = False)
+    #facturaC = db.relationship("Factura_Compra", foreign_keys="[Factura_Compra.proveedor_id]", backref = "proveedor", lazy = True, uselist = False)
 
     def serialize(self):
         return {

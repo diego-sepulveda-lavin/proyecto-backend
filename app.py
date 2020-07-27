@@ -600,13 +600,6 @@ def facturas_compras(id = None):
     # Ingreso de nueva factura
     if request.method == 'POST':
         data = request.get_json()
-        #print(data["factura"]["entradas_inventario"])
-        #print(type(float(data["factura"]["monto_otros_impuestos"])))
-          
-
-        fecha_emision = request.json.get("fecha_emision")
-        print(data["factura"])
-        print(type(float(data["factura"]["monto_otros_impuestos"])))
 
         if not data["factura"]["folio"]:
             return jsonify({"msg" : "Folio de nueva factura no puede estar vacio"}), 401
@@ -642,18 +635,15 @@ def facturas_compras(id = None):
         factura_compra = Factura_Compra()
         factura_compra.folio = int(data["factura"]["folio"])
         factura_compra.fecha_emision = data["factura"]["fecha_emision"]+timestr
-        print("fEmision", factura_compra.fecha_emision)
         factura_compra.fecha_recepcion = data["factura"]["fecha_recepcion"]+" 00:00:00"
-        print("fRecepcion", factura_compra.fecha_recepcion)
         factura_compra.monto_neto = float(data["factura"]["monto_neto"])
         factura_compra.monto_iva = float(data["factura"]["monto_iva"])
         factura_compra.monto_otros_impuestos = float(data["factura"]["monto_otros_impuestos"])
         factura_compra.monto_total = float(data["factura"]["monto_total"])
         factura_compra.proveedor_id = int(data["factura"]["proveedor_id"])
-        factura_compra.save()
+        db.session.add(factura_compra)
         
         for entrada_inv in data["factura"]["entradas_inventario"]:
-            print(entrada_inv["precio_costo_unitario"])
             entrada_inventario = Entrada_Inventario()
             entrada_inventario.cantidad=entrada_inv["cantidad"]
             entrada_inventario.precio_costo_unitario = entrada_inv["precio_costo_unitario"]
@@ -662,10 +652,11 @@ def facturas_compras(id = None):
             entrada_inventario.factura_compra_id = factura_compra.id
             entrada_inventario.producto_id =entrada_inv["producto_id"]
 
-            entrada_inventario.save()
+            factura_compra.entradas_I.append(entrada_inventario)
+            #db.session.add(factura_compra)
 
-        factura_compra.entradaI =entrada_inventario
-        factura_compra.update()
+        
+        db.session.commit()
 
         return jsonify({"msg": "Factura ingresada exitosamente"}), 201
 
