@@ -164,10 +164,6 @@ class Factura_Compra(db.Model):
     entradaI = db.relationship("Entrada_Inventario", backref = "factura" , lazy = True, uselist= False)
 
 
-
-
-
-
     def serialize(self):
         return {
             "id" : self.id,

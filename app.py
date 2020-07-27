@@ -600,16 +600,13 @@ def facturas_compras(id = None):
     # Ingreso de nueva factura
     if request.method == 'POST':
         data = request.get_json()
-<<<<<<< HEAD
-        print(data['factura'])
+        #print(data["factura"]["entradas_inventario"])
+        #print(type(float(data["factura"]["monto_otros_impuestos"])))
+          
 
-        if not data.factura["folio"]:
-=======
-        print(data["factura"])
-        print(type(float(data["factura"]["monto_otros_impuestos"])))
+        fecha_emision = request.json.get("fecha_emision")
 
         if not data["factura"]["folio"]:
->>>>>>> creandoN
             return jsonify({"msg" : "Folio de nueva factura no puede estar vacio"}), 401
         
         if not data["factura"]["fecha_emision"]:
@@ -636,32 +633,37 @@ def facturas_compras(id = None):
         facturas_compras = Factura_Compra.query.filter_by(folio = data["factura"]["folio"]).all() # Se debe verificar forma de no repetir ingreso de factura
         facturas_compras = list(map(lambda factura_compra: factura_compra.serialize(), facturas_compras))
         for factura in facturas_compras:
-            if factura["folio"] == data["folio"] and factura["proveedor_id"] == data["proveedor_id"]:
+            if factura["folio"] == data["factura"]["folio"] and factura["proveedor_id"] == data["facturas"]["proveedor_id"]:
                 return jsonify({"msg" : "Factura ya existe"})
-        
+
+        timestr = time.strftime(" %H:%M:%S")
         factura_compra = Factura_Compra()
-        factura_compra.folio = data["factura"]["folio"]
-        factura_compra.fecha_emision = time.strptime(data["factura"]["fecha_emision"], '%Y-%m-%d %H:%M:%S')
-        factura_compra.fecha_recepcion = time.strptime(data["factura"]["fecha_recepcion"], '%Y-%m-%d %H:%M:%S')
-        factura_compra.monto_neto = data["factura"]["monto_neto"]
-        factura_compra.monto_iva = data["factura"]["monto_iva"]
-        factura_compra.monto_otros_impuestos = data["factura"]["monto_otros_impuestos"]
-        factura_compra.monto_total = data["factura"]["monto_total"]
-        factura_compra.proveedor_id = data["factura"]["proveedor_id"]
+        factura_compra.folio = int(data["factura"]["folio"])
+        factura_compra.fecha_emision = data["factura"]["fecha_emision"]+timestr
+        print("fEmision", factura_compra.fecha_emision)
+        factura_compra.fecha_recepcion = data["factura"]["fecha_recepcion"]+" 00:00:00"
+        print("fRecepcion", factura_compra.fecha_recepcion)
+        factura_compra.monto_neto = float(data["factura"]["monto_neto"])
+        factura_compra.monto_iva = float(data["factura"]["monto_iva"])
+        factura_compra.monto_otros_impuestos = float(data["factura"]["monto_otros_impuestos"])
+        factura_compra.monto_total = float(data["factura"]["monto_total"])
+        factura_compra.proveedor_id = int(data["factura"]["proveedor_id"])
         factura_compra.save()
         
-        #factura_compra.entradas.cantidad o usuario_id
+        for entrada_inv in data["factura"]["entradas_inventario"]:
+            print(entrada_inv["precio_costo_unitario"])
+            entrada_inventario = Entrada_Inventario()
+            entrada_inventario.cantidad=entrada_inv["cantidad"]
+            entrada_inventario.precio_costo_unitario = entrada_inv["precio_costo_unitario"]
+            entrada_inventario.costo_total = entrada_inv["costo_total"]
+            entrada_inventario.usuario_id = entrada_inv["usuario_id"]
+            entrada_inventario.factura_compra_id = factura_compra.id
+            entrada_inventario.producto_id =entrada_inv["producto_id"]
 
-        entrada_inventario = Entrada_Inventario()
-        entrada_inventario.cantidad=data["cantidad"]
-        entrada_inventario.precio_costo_unitario = data[""]
-        entrada_inventario.costo_total = data[""]
-        entrada_inventario.usuario_id = data["usuario_id"]
-        entrada_inventario.factura_compra_id = factura_compra.id
-        entrada_inventario.producto_id =data["producto_id"]
+            entrada_inventario.save()
 
-        entrada_inventario.save()
-
+        factura_compra.entradaI =entrada_inventario
+        factura_compra.update()
 
         return jsonify({"msg": "Factura ingresada exitosamente"}), 201
 
