@@ -600,47 +600,54 @@ def facturas_compras(id = None):
     # Ingreso de nueva factura
     if request.method == 'POST':
         data = request.get_json()
+<<<<<<< HEAD
         print(data['factura'])
 
         if not data.factura["folio"]:
+=======
+        print(data["factura"])
+        print(type(float(data["factura"]["monto_otros_impuestos"])))
+
+        if not data["factura"]["folio"]:
+>>>>>>> creandoN
             return jsonify({"msg" : "Folio de nueva factura no puede estar vacio"}), 401
         
-        if not data["fecha_emision"]:
+        if not data["factura"]["fecha_emision"]:
             return jsonify({"msg" : "Fecha de emisión de nueva factura no puede estar vacio"}), 401
         
-        if not data["fecha_recepcion"]:
+        if not data["factura"]["fecha_recepcion"]:
             return jsonify({"msg" : "Fecha de recepción de nueva factura no puede estar vacio"}), 401
         
-        if not data["monto_neto"]:
+        if not float(data["factura"]["monto_neto"]):
             return jsonify({"msg" : "Monto Neto de nueva factura no puede estar vacio"}), 401
         
-        if not data["monto_iva"]:
+        if not float(data["factura"]["monto_iva"]):
             return jsonify({"msg" : "Monto IVA de nueva factura no puede estar vacio"}), 401
         
-        if not data["monto_otros_impuestos"] >=0:
+        if not float(data["factura"]["monto_otros_impuestos"]) >=0:
             return jsonify({"msg" : "Monto de otros Impuestos de nueva factura no puede estar vacio"}), 401
         
-        if not data["monto_total"]:
+        if not float(data["factura"]["monto_total"]):
             return jsonify({"msg" : "Monto Total de nueva factura no puede estar vacio"}), 401
         
-        if not data["proveedor_id"]:
+        if not data["factura"]["proveedor_id"]:
             return jsonify({"msg" : "Id proveedor no puede estar vacio"}), 401
 
-        facturas_compras = Factura_Compra.query.filter_by(folio = data["folio"]).all() # Se debe verificar forma de no repetir ingreso de factura
+        facturas_compras = Factura_Compra.query.filter_by(folio = data["factura"]["folio"]).all() # Se debe verificar forma de no repetir ingreso de factura
         facturas_compras = list(map(lambda factura_compra: factura_compra.serialize(), facturas_compras))
         for factura in facturas_compras:
             if factura["folio"] == data["folio"] and factura["proveedor_id"] == data["proveedor_id"]:
                 return jsonify({"msg" : "Factura ya existe"})
         
         factura_compra = Factura_Compra()
-        factura_compra.folio = data["folio"]
-        factura_compra.fecha_emision = data["fecha_emision"] 
-        factura_compra.fecha_recepcion = data["fecha_recepcion"]
-        factura_compra.monto_neto = data["monto_neto"]
-        factura_compra.monto_iva = data["monto_iva"]
-        factura_compra.monto_otros_impuestos = data["monto_otros_impuestos"]
-        factura_compra.monto_total = data["monto_total"]
-        factura_compra.proveedor_id = data["proveedor_id"]
+        factura_compra.folio = data["factura"]["folio"]
+        factura_compra.fecha_emision = time.strptime(data["factura"]["fecha_emision"], '%Y-%m-%d %H:%M:%S')
+        factura_compra.fecha_recepcion = time.strptime(data["factura"]["fecha_recepcion"], '%Y-%m-%d %H:%M:%S')
+        factura_compra.monto_neto = data["factura"]["monto_neto"]
+        factura_compra.monto_iva = data["factura"]["monto_iva"]
+        factura_compra.monto_otros_impuestos = data["factura"]["monto_otros_impuestos"]
+        factura_compra.monto_total = data["factura"]["monto_total"]
+        factura_compra.proveedor_id = data["factura"]["proveedor_id"]
         factura_compra.save()
         
         #factura_compra.entradas.cantidad o usuario_id
