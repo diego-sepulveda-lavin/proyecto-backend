@@ -575,7 +575,7 @@ def salidas_inventario(id = None):
 
 @app.route('/api/facturas-compras', methods = ['GET', "POST"])
 @app.route("/api/facturas-compras/<int:id>", methods=["GET"])
-#@jwt_required
+@jwt_required
 def facturas_compras(id = None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
