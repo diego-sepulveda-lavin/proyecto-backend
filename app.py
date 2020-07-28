@@ -379,8 +379,6 @@ def usuarios(id = None):
             elif status == "false":
                 status = False
 
-            print(status)
-            print(type(status))
            
             rut_ocupado = Usuario.query.filter_by(rut = rut).first()
             if rut_ocupado and rut_ocupado.id != id:
