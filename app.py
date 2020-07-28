@@ -589,8 +589,8 @@ def facturas_compras(id = None):
             else:
                 return jsonify({"msg" : "No hay datos de facturas"}), 400
         if id is not None:
-            facturas_compras = Factura_Compra.query.get(id)
-            if facturas_compras:
+            factura_compra = Factura_Compra.query.get(id)
+            if factura_compra:
                 return jsonify(factura_compra.serialize()), 200
             else:
                 return jsonify({"msg" : "Factura no encontrada"}), 400
