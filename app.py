@@ -262,6 +262,32 @@ def empresas(id = None):
             empresaActualizar.update()   
             return jsonify(empresaActualizar.serialize()),200
 
+@app.route("/api/valida-Caja", methods=["POST"])
+@jwt_required
+def valida_caja():
+    administrador = request.json.get("administrador", None)
+    password = request.json.get("password", None)
+    print(administrador)
+    print(password)
+
+    if not administrador or not password:
+        return jsonify({"msg":"Faltan campos de Administrador"}),400
+
+    admin_valido = Usuario.query.filter_by(codigo = administrador).first()
+    if not admin_valido:
+        return jsonify({"msg": "Admin inválido"}),400
+    print("aqui")
+    print(admin_valido)
+    if bcrypt.check_password_hash(admin_valido.password,password):
+        return jsonify({"msg": "Apertura Exitosa"}),200
+    else:
+        return jsonify({"msg": "Validación Administrador incorrecta"}),400
+    
+        
+     
+
+
+
 @app.route("/api/usuarios", methods = ["GET","POST"])
 @app.route("/api/usuarios/<int:id>", methods = ["GET","DELETE", "PUT"])
 @jwt_required
