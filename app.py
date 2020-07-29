@@ -572,7 +572,7 @@ def salidas_inventario(id = None):
             return jsonify({"msg": "Salida de inventario modificada exitosamente"}), 201
 
 @app.route('/api/facturas-compras', methods = ['GET', "POST"])
-@app.route("/api/facturas-compras/<int:id>", methods=["GET"])
+@app.route("/api/facturas-compras/<int:id>", methods=["GET", 'PUT'])
 @jwt_required
 def facturas_compras(id = None):
 
@@ -633,7 +633,7 @@ def facturas_compras(id = None):
         factura_compra = Factura_Compra()
         factura_compra.folio = int(data["factura"]["folio"])
         factura_compra.fecha_emision = data["factura"]["fecha_emision"]+timestr
-        factura_compra.fecha_recepcion = data["factura"]["fecha_recepcion"]+" 00:00:00"
+        factura_compra.fecha_recepcion = data["factura"]["fecha_recepcion"]+timestr
         factura_compra.monto_neto = float(data["factura"]["monto_neto"])
         factura_compra.monto_iva = float(data["factura"]["monto_iva"])
         factura_compra.monto_otros_impuestos = float(data["factura"]["monto_otros_impuestos"])
@@ -654,6 +654,60 @@ def facturas_compras(id = None):
         factura_compra.save()
 
         return jsonify({"msg": "Factura creada exitosamente."}), 201
+
+        # Modificacion factura
+    if request.method == 'PUT':
+        data = request.get_json()
+
+        if not data["folio"]:
+            return jsonify({"msg" : "Folio de factura no puede estar vacio"}), 401
+
+        if not data["fecha_emision"]:
+            return jsonify({"msg" : "Fecha de emisión de factura no puede estar vacio"}), 401
+
+        if not data["fecha_recepcion"]:
+            return jsonify({"msg" : "Fecha de recepción de factura no puede estar vacio"}), 401
+
+        if not data["monto_neto"]:
+            return jsonify({"msg" : "Monto Neto de factura no puede estar vacio"}), 401
+
+        if not data["monto_iva"]:
+            return jsonify({"msg" : "Monto IVA de factura no puede estar vacio"}), 401
+        
+        if not data["monto_otros_impuestos"] and data["monto_otros_impuestos"] != 0:
+            return jsonify({"msg" : "Monto de otros Impuestos de factura no puede estar vacio"}), 401
+        
+        if not data["monto_total"]:
+            return jsonify({"msg" : "Monto Total de factura no puede estar vacio"}), 401
+
+        if not data["proveedor_id"]:
+            return jsonify({"msg" : "Id proveedor no puede estar vacio"}), 401
+
+        factura_a_modificar = Factura_Compra.query.get(id) # Se debe verificar forma de no repetir ingreso de factura
+        if not factura_a_modificar:
+            return jsonify({"msg" : "Factura no encontrada"}), 401
+        if factura_a_modificar:
+            factura_a_modificar.folio = data["folio"]
+            factura_a_modificar.fecha_emision = data["fecha_emision"]+time.strftime(" %H:%M:%S")
+            factura_a_modificar.fecha_recepcion = data["fecha_recepcion"]+time.strftime(" %H:%M:%S")
+            factura_a_modificar.monto_neto = data["monto_neto"]
+            factura_a_modificar.monto_iva = data["monto_iva"]
+            factura_a_modificar.monto_otros_impuestos = data["monto_otros_impuestos"]
+            factura_a_modificar.monto_total = data["monto_total"]
+            factura_a_modificar.proveedor_id = data['proveedor_id']
+
+            for entrada_inv_a_mod in data['entradas_inventario']:
+                entrada_inventario = Entrada_Inventario.query.get(entrada_inv_a_mod['id'])
+                if entrada_inventario:
+                    print('encontrada la entrada en inv', entrada_inv_a_mod['id'])
+                if not entrada_inventario:
+                    print('no encontrada la entra en inv', entrada_inv_a_mod['id'])
+
+
+            factura_a_modificar.update()
+            return jsonify({"msg" : "Factura modificada"}), 200
+            
+
 
 @app.route('/api/productos', methods = ['GET', "POST"])
 @app.route("/api/productos/<int:id>", methods=["GET", "PUT", "DELETE"])

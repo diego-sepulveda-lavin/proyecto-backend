@@ -102,6 +102,7 @@ class Entrada_Inventario(db.Model):
             "fecha_registro" : self.fecha_registro,
             "usuario_id" : self.usuario_id,
             "factura_compra_id" : self.factura_compra_id,
+            "producto_id" : self.producto_id,
             "producto" : self.producto.serialize()
         }
 
