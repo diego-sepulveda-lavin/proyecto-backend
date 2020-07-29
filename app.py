@@ -683,7 +683,7 @@ def facturas_compras(id = None):
         if not data["proveedor_id"]:
             return jsonify({"msg" : "Id proveedor no puede estar vacio"}), 401
 
-        factura_a_modificar = Factura_Compra.query.get(id) # Se debe verificar forma de no repetir ingreso de factura
+        factura_a_modificar = Factura_Compra.query.get(id) # Se busca factura a modificar en DB
         if not factura_a_modificar:
             return jsonify({"msg" : "Factura no encontrada"}), 401
         if factura_a_modificar:
@@ -696,12 +696,28 @@ def facturas_compras(id = None):
             factura_a_modificar.monto_total = data["monto_total"]
             factura_a_modificar.proveedor_id = data['proveedor_id']
 
-            for entrada_inv_a_mod in data['entradas_inventario']:
-                entrada_inventario = Entrada_Inventario.query.get(entrada_inv_a_mod['id'])
-                if entrada_inventario:
-                    print('encontrada la entrada en inv', entrada_inv_a_mod['id'])
-                if not entrada_inventario:
-                    print('no encontrada la entra en inv', entrada_inv_a_mod['id'])
+
+
+            for entrada_inv_enviada in data['entradas_inventario']:
+                check_key = entrada_inv_enviada.get('id', None)
+
+               
+
+                if check_key:
+                    entrada_inventario = Entrada_Inventario.query.get(entrada_inv_enviada['id']) # Se busca entrada en inventario de factura asociada en DB
+                    if entrada_inventario:
+                        continue
+                    if not entrada_inventario:
+                        return jsonify({"msg": f"Entrada {entrada_inv_enviada['id']} no se puede modificar, ya que no existe en DB"}),
+                if not check_key:
+                    print('crear y borrar')
+                    entrada_inventario = Entrada_Inventario()
+                    entrada_inventario.cantidad = entrada_inv_enviada["cantidad"]
+                    entrada_inventario.precio_costo_unitario = entrada_inv_enviada["precio_costo_unitario"]
+                    entrada_inventario.costo_total = entrada_inv_enviada["costo_total"]
+                    entrada_inventario.usuario_id = entrada_inv_enviada["usuario_id"]
+                    entrada_inventario.producto_id = entrada_inv_enviada["producto_id"]
+                    factura_a_modificar.entradas_I.append(entrada_inventario)
 
 
             factura_a_modificar.update()
