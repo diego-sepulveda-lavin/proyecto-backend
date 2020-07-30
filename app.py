@@ -854,51 +854,43 @@ def documentos_venta(id = None):
     
     # PERMITE CREAR NUEVO DOCUMENTO VENTA
     if request.method == 'POST':
+        data = request.get_json()
 
-        tipo_documento = request.json.get("tipo_documento", None)
-        numero_documento = request.json.get("numero_documento", None)
-        fecha_emision = request.json.get("fecha_emision", None)
-        monto_neto = request.json.get("monto_neto", None)
-        monto_iva = request.json.get("monto_iva", None)
-        monto_otros_impuestos = request.json.get("monto_otros_impuestos", None)
-        monto_total = request.json.get("monto_total", None)
-        forma_pago = request.json.get("forma_pago", None)
-
-        if not tipo_documento:
+        if not data['datosVenta']["tipo_documento"]:
             return jsonify({"msg": "Tipo de Documento no puede estar vacío"}), 401
-        if not numero_documento:
+        if not data['datosVenta']["numero_documento"]:
             return jsonify({"msg": "Numero de Documento no puede estar vacío"}), 401
-        if not fecha_emision:
-            return jsonify({"msg": "Fecha de Emisión no puede estar vacío"}), 401
-        if not monto_neto:
+        #if not data['datosVenta']["fecha_emision"]:
+            #return jsonify({"msg": "Fecha de Emisión no puede estar vacío"}), 401
+        if not data['datosVenta']["monto_neto"]:
             return jsonify({"msg": "Monto Neto no puede estar vacío"}), 401
-        if not monto_iva:
+        if not data['datosVenta']["monto_iva"]:
             return jsonify({"msg": "Monto IVA no puede estar vacío"}), 401
-        if not monto_otros_impuestos and monto_otros_impuestos != 0:
-            return jsonify({"msg": "Monto otros Impuestos no puede estar vacío"}), 401
-        if not monto_total:
+        #if not data['datosVenta']["monto_otros_impuestos"] and monto_otros_impuestos != 0:
+            #return jsonify({"msg": "Monto otros Impuestos no puede estar vacío"}), 401
+        if not data['datosVenta']["monto_total"]:
             return jsonify({"msg": "Monto Total no puede estar vacío"}), 401
-        if not forma_pago:
+        if not data['datosVenta']["forma_pago"]:
             return jsonify({"msg": "Forma de Pago no puede estar vacío"}), 401
         
-        documentos_venta = Documento_Venta.query.filter_by(numero_documento = numero_documento).all()
+        documentos_venta = Documento_Venta.query.filter_by(numero_documento = data['datosVenta']["numero_documento"]).all()
+
         documentos_venta = list(map(lambda documento_venta: documento_venta.serialize(), documentos_venta)) #DEVUELVE LISTA DE DICCIONARIOS CON MATCHES DE DOCUMENTOS DE VENTA
+
         for documento in documentos_venta:
-            if documento['numero_documento'] == numero_documento and documento['tipo_documento'] == tipo_documento:
+            if documento['numero_documento'] == int(data['datosVenta']["numero_documento"]) and documento['tipo_documento'] == data['datosVenta']["tipo_documento"]:
                 return jsonify({"msg": "Numero de Documento y Tipo de Documento ya se encuentra ingresado"}), 401        
 
         documento_venta = Documento_Venta()
-        documento_venta.tipo_documento = tipo_documento
-        documento_venta.numero_documento = numero_documento
-        documento_venta.fecha_emision = fecha_emision
-        documento_venta.monto_neto = monto_neto
-        documento_venta.monto_iva = monto_iva
-        documento_venta.monto_otros_impuestos = monto_otros_impuestos
-        documento_venta.monto_total = monto_total
-        documento_venta.forma_pago = forma_pago
+        documento_venta.tipo_documento = data['datosVenta']["tipo_documento"]
+        documento_venta.numero_documento = data['datosVenta']["numero_documento"]
+        documento_venta.monto_neto = data['datosVenta']["monto_neto"]
+        documento_venta.monto_iva = data['datosVenta']["monto_iva"]
+        documento_venta.monto_total = data['datosVenta']["monto_total"]
+        documento_venta.forma_pago = data['datosVenta']["forma_pago"]
 
         documento_venta.save()    
-        return jsonify(documento_venta.serialize()), 201
+        return jsonify({"msg": "Factura creada exitosamente."}), 201
 
 @app.route("/api/proveedores", methods = ['GET', 'POST'])
 @app.route("/api/proveedores/<int:id>", methods = ['GET', 'PUT', 'DELETE'])

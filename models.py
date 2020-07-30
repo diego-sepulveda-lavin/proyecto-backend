@@ -226,13 +226,13 @@ class Documento_Venta(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     tipo_documento = db.Column(db.String(100), nullable = False)
     numero_documento = db.Column(db.Integer, nullable = False)
-    fecha_emision = db.Column(db.DateTime, nullable = False)
+    fecha_emision = db.Column(db.DateTime, nullable = False, default = datetime.now)
     monto_neto = db.Column(db.Float, nullable = False)
     monto_iva = db.Column(db.Float, nullable = False)
-    monto_otros_impuestos = db.Column(db.Float, nullable = False)
+    monto_otros_impuestos = db.Column(db.Float, nullable = True)
     monto_total = db.Column(db.Float, nullable = False)
     forma_pago = db.Column(db.String(100), nullable = False)
-    salidaI = db.relationship("Salida_Inventario", foreign_keys="[Salida_Inventario.documento_venta_id]", backref = "documentoV", lazy = True, uselist = False)
+    salidas_I = db.relationship("Salida_Inventario", backref = "documento_venta", lazy = True)
 
     def serialize(self):
         return {
@@ -244,7 +244,8 @@ class Documento_Venta(db.Model):
             "monto_iva":self.monto_iva,
             "monto_otros_impuestos":self.monto_otros_impuestos,
             "monto_total":self.monto_total,
-            "forma_pago":self.forma_pago
+            "forma_pago":self.forma_pago,
+            "salidas_inventario": list(map(lambda salida_I : salida_I.serialize(), self.salidas_I))
         }
 
     def save(self):

@@ -87,3 +87,41 @@ entrada_inv_a_mod3 = {
     'producto_id': '3'
 }
 KeyError: 'id'
+
+
+venta = {
+    'buscador': '', 
+    'detalleProductos': [
+        {
+            'descripcion': 'Chocolate', 
+            'cantidad': 1, 
+            'precio_venta_unitario': 2000, 
+            'total': 2000, 
+            'producto_id': 1
+        }, 
+        {
+            'descripcion': 'Pan', 
+            'cantidad': 1, 
+            'precio_venta_unitario': 1000, 
+            'total': 1000, 
+            'producto_id': 2
+        },
+        {
+            'descripcion': 'Carne', 
+            'cantidad': 1, 
+            'precio_venta_unitario': 5000, 
+            'total': 5000, 
+            'producto_id': 3
+        }
+    ],
+    'datosVenta': {
+        'monto_neto': 6723, 
+        'monto_iva': 1278, 
+        'monto_total': 8000, 
+        'monto_recibido': '10000', 
+        'vuelto': 2000, 
+        'tipo_documento': 'boleta', 
+        'numero_documento': '1', 
+        'forma_pago': 'efectivo'
+    }
+}
