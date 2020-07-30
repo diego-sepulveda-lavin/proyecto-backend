@@ -94,7 +94,7 @@ def recuperar_email():
                     </head>
                     <body>
                         <p>Este correo se autogeneró, debido a que solicitaste un cambio de contraseña</p>
-                        <p>El link contraseña es el siguiente: <a href="{url}{access_token}">Click aqui</a></p>
+                        <p>El link para recuperar tu contraseña es el siguiente: <a href="{url}{access_token}">Click aqui</a></p>
                     </body>
                     </html>"""
         mail.send(msg)
@@ -722,29 +722,18 @@ def facturas_compras(id = None):
             factura_a_modificar.monto_total = data["monto_total"]
             factura_a_modificar.proveedor_id = data['proveedor_id']
 
-
+            entradas_inventario = Entrada_Inventario.query.filter_by(factura_compra_id = id).all()
+            for entrada_inventario in entradas_inventario:
+                db.session.delete(entrada_inventario)
 
             for entrada_inv_enviada in data['entradas_inventario']:
-                check_key = entrada_inv_enviada.get('id', None)
-
-               
-
-                if check_key:
-                    entrada_inventario = Entrada_Inventario.query.get(entrada_inv_enviada['id']) # Se busca entrada en inventario de factura asociada en DB
-                    if entrada_inventario:
-                        continue
-                    if not entrada_inventario:
-                        return jsonify({"msg": f"Entrada {entrada_inv_enviada['id']} no se puede modificar, ya que no existe en DB"}),
-                if not check_key:
-                    print('crear y borrar')
-                    entrada_inventario = Entrada_Inventario()
-                    entrada_inventario.cantidad = entrada_inv_enviada["cantidad"]
-                    entrada_inventario.precio_costo_unitario = entrada_inv_enviada["precio_costo_unitario"]
-                    entrada_inventario.costo_total = entrada_inv_enviada["costo_total"]
-                    entrada_inventario.usuario_id = entrada_inv_enviada["usuario_id"]
-                    entrada_inventario.producto_id = entrada_inv_enviada["producto_id"]
-                    factura_a_modificar.entradas_I.append(entrada_inventario)
-
+                entrada_inventario = Entrada_Inventario()
+                entrada_inventario.cantidad = entrada_inv_enviada["cantidad"]
+                entrada_inventario.precio_costo_unitario = entrada_inv_enviada["precio_costo_unitario"]
+                entrada_inventario.costo_total = entrada_inv_enviada["costo_total"]
+                entrada_inventario.usuario_id = entrada_inv_enviada["usuario_id"]
+                entrada_inventario.producto_id = entrada_inv_enviada["producto_id"]
+                factura_a_modificar.entradas_I.append(entrada_inventario)
 
             factura_a_modificar.update()
             return jsonify({"msg" : "Factura modificada"}), 200
