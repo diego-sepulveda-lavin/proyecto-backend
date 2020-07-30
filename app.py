@@ -276,6 +276,8 @@ def valida_caja():
     admin_valido = Usuario.query.filter_by(codigo = administrador).first()
     if not admin_valido:
         return jsonify({"msg": "Admin inválido"}),400
+    if admin_valido.rol != "Admin":
+        return jsonify({"msg": "No eres administrador"}),400
     print("aqui")
     print(admin_valido)
     if bcrypt.check_password_hash(admin_valido.password,password):
