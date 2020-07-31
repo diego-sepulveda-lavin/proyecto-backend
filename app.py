@@ -858,14 +858,10 @@ def documentos_venta(id = None):
             return jsonify({"msg": "Tipo de Documento no puede estar vacío"}), 401
         if not data['datosVenta']["numero_documento"]:
             return jsonify({"msg": "Numero de Documento no puede estar vacío"}), 401
-        #if not data['datosVenta']["fecha_emision"]:
-            #return jsonify({"msg": "Fecha de Emisión no puede estar vacío"}), 401
         if not data['datosVenta']["monto_neto"]:
             return jsonify({"msg": "Monto Neto no puede estar vacío"}), 401
         if not data['datosVenta']["monto_iva"]:
             return jsonify({"msg": "Monto IVA no puede estar vacío"}), 401
-        #if not data['datosVenta']["monto_otros_impuestos"] and monto_otros_impuestos != 0:
-            #return jsonify({"msg": "Monto otros Impuestos no puede estar vacío"}), 401
         if not data['datosVenta']["monto_total"]:
             return jsonify({"msg": "Monto Total no puede estar vacío"}), 401
         if not data['datosVenta']["forma_pago"]:
@@ -887,8 +883,42 @@ def documentos_venta(id = None):
         documento_venta.monto_total = data['datosVenta']["monto_total"]
         documento_venta.forma_pago = data['datosVenta']["forma_pago"]
 
+        for detalle_producto in data['detalleProductos']:
+            salida_inventario = Salida_Inventario()
+            salida_inventario.cantidad = detalle_producto['cantidad']
+            salida_inventario.precio_costo_unitario = 1 #FALTA INGRESAR COSTO UNITARIO REAL
+            salida_inventario.precio_venta_unitario = detalle_producto['precio_venta_unitario'] / 1.19 #ELIMINAR DECIMALES?
+            salida_inventario.costo_total = 1 #FALTA INGRESAR COSTO TOTAL REAL
+            salida_inventario.venta_total = detalle_producto['total'] / 1.19 #ELIMINAR DECIMALES?
+            salida_inventario.usuario_id = 1 #FALTA CAPTURAR USUARIO REAL
+            salida_inventario.producto_id = detalle_producto['producto_id']
+
+            documento_venta.salidas_I.append(salida_inventario)
+
+
+
+        """ 
+        'descripcion': 'Chocolate', 
+        'cantidad': 1, 
+        'precio_venta_unitario': 2000, 
+        'total': 2000, 
+        'producto_id': 1
+        """
+
+        """ id = db.Column(db.Integer, primary_key = True)
+        cantidad = db.Column(db.Float, nullable = False)
+        precio_costo_unitario = db.Column(db.Float, nullable = False)
+        precio_venta_unitario = db.Column(db.Float, nullable = False)
+        costo_total = db.Column(db.Float, nullable = False)
+        venta_total = db.Column(db.Float, nullable = False)
+        fecha_registro = db.Column(db.DateTime, nullable = False, default = datetime.now) #hora local
+        usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable = False)
+        documento_venta_id = db.Column(db.Integer, db.ForeignKey("documentos_ventas.id"), nullable = False)
+        producto_id = db.Column(db.Integer, db.ForeignKey("productos.id"), nullable = False) """
+
+        tipo_documento = data['datosVenta']["tipo_documento"]
         documento_venta.save()    
-        return jsonify({"msg": "Factura creada exitosamente."}), 201
+        return jsonify({"msg": f"{tipo_documento.capitalize()} creada exitosamente."}), 201
 
 @app.route("/api/proveedores", methods = ['GET', 'POST'])
 @app.route("/api/proveedores/<int:id>", methods = ['GET', 'PUT', 'DELETE'])

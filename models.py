@@ -121,11 +121,13 @@ class Salida_Inventario(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     cantidad = db.Column(db.Float, nullable = False)
     precio_costo_unitario = db.Column(db.Float, nullable = False)
+    precio_venta_unitario = db.Column(db.Float, nullable = False)
     costo_total = db.Column(db.Float, nullable = False)
+    venta_total = db.Column(db.Float, nullable = False)
     fecha_registro = db.Column(db.DateTime, nullable = False, default = datetime.now) #hora local
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable = False)
-    producto_id = db.Column(db.Integer, db.ForeignKey("productos.id"), nullable = False)
     documento_venta_id = db.Column(db.Integer, db.ForeignKey("documentos_ventas.id"), nullable = False)
+    producto_id = db.Column(db.Integer, db.ForeignKey("productos.id"), nullable = False)
 
 
     def serialize(self):
@@ -133,11 +135,12 @@ class Salida_Inventario(db.Model):
             "id" : self.id,
             "cantidad" : self.cantidad,
             "precio_costo_unitario" : self.precio_costo_unitario,
+            "precio_venta_unitario" : self.precio_venta_unitario,
             "costo_total" : self.costo_total,
             "fecha_registro" : self.fecha_registro,
             "usuario_id" : self.usuario_id,
-            "producto_id" : self.producto_id,
-            "documento_venta_id" : self.documento_venta_id
+            "documento_venta_id" : self.documento_venta_id,
+            "producto_id" : self.producto_id
         }
 
     def save(self):
