@@ -795,6 +795,7 @@ def productos(id=None):
     if request.method == 'PUT':
 
         data = request.get_json()
+        print(data)
 
         if not data:
             return jsonify({"msg": f"La solicitud no puede estar vacía"}), 400
@@ -842,7 +843,7 @@ def productos(id=None):
         
         db.session.commit() 
 
-        return jsonify("msg": "Productos modificados exitosamente"), 200
+        return jsonify({"msg": "Productos modificados exitosamente"}), 200
 
     # Elimina un producto
     if request.method == 'DELETE':
