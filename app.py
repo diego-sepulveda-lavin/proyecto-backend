@@ -379,7 +379,7 @@ def usuarios(id = None):
         usuario.rol = rol
         usuario.email = email
         usuario.password = bcrypt.generate_password_hash(password).decode("utf-8")
-        usuario.empresa_id = 1 
+        usuario.empresa_id = 1
         usuario.foto = filename
         usuario.save()
         usuario.codigo = usuario.generaCodigo()
