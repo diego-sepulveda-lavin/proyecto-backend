@@ -1,14 +1,19 @@
-import os, datetime, time
-from werkzeug.utils import secure_filename
+import datetime
+import os
+import time
+
 from flask import Flask, request, jsonify, send_from_directory
-from flask_script import Manager
-from flask_migrate import Migrate, MigrateCommand
 from flask_bcrypt import Bcrypt
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
 from flask_mail import Mail, Message
-from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura_Compra, Entrada_Inventario, Salida_Inventario, Documento_Venta, Cuadratura_Caja
+from flask_migrate import Migrate, MigrateCommand
+from flask_script import Manager
+from werkzeug.utils import secure_filename
+
 from config import Development
+from models import db, Empresa, Usuario, Producto, Categoria, Proveedor, Factura_Compra, Entrada_Inventario, \
+    Salida_Inventario, Documento_Venta, Cuadratura_Caja
 
 ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
 
@@ -39,6 +44,8 @@ ALLOWED_EXTENSIONS_IMG = {'png', 'jpg', 'jpeg'}
 # Using the expired_token_loader decorator, we will now call
 # this function whenever an expired but otherwise valid access
 # token attempts to access an endpoint
+
+
 @jwt.expired_token_loader
 def my_expired_token_callback(expired_token):
     token_type = expired_token['type']
@@ -46,41 +53,43 @@ def my_expired_token_callback(expired_token):
         'msg': 'La sesión ha caducado, por favor Logearse.'.format(token_type)
     }), 401
 
+
 def allowed_images_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS_IMG
 
-@app.route('/api/email', methods = ['POST'])
+
+@app.route('/api/email', methods=['POST'])
 def email():
     nombre = request.json.get('nombre', None)
     email = request.json.get('email', None)
     consulta = request.json.get('consulta', None)
 
     if not nombre:
-        return jsonify ({"msg": "Por favor ingresa tu nombre"}), 400
+        return jsonify({"msg": "Por favor ingresa tu nombre"}), 400
     if not email:
-        return jsonify ({"msg": "Por favor ingresa tu email"}), 400
+        return jsonify({"msg": "Por favor ingresa tu email"}), 400
     if not consulta:
-        return jsonify ({"msg": "Por favor ingresa tu constulta"}), 400
+        return jsonify({"msg": "Por favor ingresa tu constulta"}), 400
     
     msg = Message('Consulta desde Formulario Landing Page', recipients=[os.environ.get('MAIL_DEFAULT_RECIPIENT')])
     msg.body = f"Nombre: {nombre}\nEmail de contacto: {email}\nConsulta: {consulta}"
     mail.send(msg)
-    return jsonify ({"msg": "Muchas gracias por contactarte con nosotros"}), 200
+    return jsonify({"msg": "Muchas gracias por contactarte con nosotros"}), 200
 
-@app.route('/api/recuperar-email', methods = ['POST'])
+
+@app.route('/api/recuperar-email', methods=['POST'])
 def recuperar_email():
     email = request.json.get('email', None)
 
     if not email:
         return jsonify({"msg": "Debes ingresar un email"}), 400
     
-    check_email = Usuario.query.filter_by(email = email).first()
+    check_email = Usuario.query.filter_by(email=email).first()
 
     if not check_email:
         return jsonify({"msg": "El email ingresado no es correcto"}), 400
-    
-    
+
     if check_email:
         expires = datetime.timedelta(hours=1)
         access_token = create_access_token(identity=check_email.email, expires_delta=expires)
@@ -101,7 +110,8 @@ def recuperar_email():
 
         return jsonify({"msg": "Se ha enviado un correo para recuperar la contraseña"}), 200
 
-@app.route('/api/nueva-password/', methods = ['PUT'])
+
+@app.route('/api/nueva-password/', methods=['PUT'])
 @jwt_required
 def nueva_password():
     
@@ -118,7 +128,7 @@ def nueva_password():
     if password != repassword:
         return jsonify({"msg": "Ambas contraseñas deben ser iguales"}), 400
     
-    usuario = Usuario.query.filter_by(email = current_user).first()
+    usuario = Usuario.query.filter_by(email=current_user).first()
     usuario.password = bcrypt.generate_password_hash(password).decode("utf-8")
     usuario.update()
 
@@ -127,23 +137,25 @@ def nueva_password():
 
 @app.route('/api/images/<filename>')
 def uploaded_file(filename):
-    #Se le indica en que carpeta guardará la foto, en este caso "static/images" donde static se definio en el config.py en la variable upload_folder
+    # Se le indica en que carpeta guardará la foto, en este caso "static/images" donde static se definio en el config.py
+    # en la variable upload_folder
     return send_from_directory(app.config['UPLOAD_FOLDER']+"/images", filename)
 
-@app.route("/api/login/", methods = ["POST"])
+
+@app.route("/api/login/", methods=["POST"])
 def login():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
 
     if not email:
-        return jsonify({"msg": "Email no puede estar vacío"}),400
+        return jsonify({"msg": "Email no puede estar vacío"}), 400
     if not password:
-        return jsonify({"msg": "Contraseña no puede estar vacía"}),400
+        return jsonify({"msg": "Contraseña no puede estar vacía"}), 400
 
-    user = Usuario.query.filter_by(email = email).first()
-    #Revisa si existe el usuario en DB y compara contraseñas
+    user = Usuario.query.filter_by(email=email).first()
+    # Revisa si existe el usuario en DB y compara contraseñas
     if not user or not bcrypt.check_password_hash(user.password, password):
-        return jsonify({"msg":"Email o contraseña inválidos"}),401
+        return jsonify({"msg": "Email o contraseña inválidos"}), 401
     
     expires = datetime.timedelta(days=1)
     access_token = create_access_token(identity=user.email, expires_delta=expires)
@@ -155,15 +167,15 @@ def login():
 
     return jsonify(data), 200
 
-@app.route('/api/empresas', methods = ['GET', "POST"])
-@app.route('/api/empresas/<int:id>', methods = ['GET', "PUT","DELETE"])
+
+@app.route('/api/empresas', methods=['GET', "POST"])
+@app.route('/api/empresas/<int:id>', methods=['GET', "PUT", "DELETE"])
 @jwt_required
-def empresas(id = None):
+def empresas(id=None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-    current_user = get_jwt_identity()
-    probando = Usuario.query.filter_by(email = current_user).first()
-    ### Ver Empresas ###
+
+    # Ver Empresas
     if request.method == 'GET':
         if not id:
             empresas = Empresa.query.all()
@@ -172,23 +184,23 @@ def empresas(id = None):
             empresas = list(map(lambda empresa: empresa.serialize(),empresas))
             return jsonify(empresas),200
 
-    ### Ver Empresa por ID ###
+    # Ver Empresa por ID
         empresa = Empresa.query.get(id)
         if empresa:
-            return jsonify(empresa.serialize()),200
-        return jsonify({"msg": "Empresa no se encuentra en el sistema"}),400
+            return jsonify(empresa.serialize()), 200
+        return jsonify({"msg": "Empresa no se encuentra en el sistema"}), 400
 
-    ### Eliminar Empresa por ID ###
+    # Eliminar Empresa por ID
     if request.method == "DELETE":
         if id:
             empresa= Empresa.query.get(id)
             if empresa:
                 empresa.delete()
-                return jsonify({"msg": f"Empresa <{empresa.nombre}> eliminada exitosamente!"}),200
+                return jsonify({"msg": f"Empresa <{empresa.nombre}> eliminada exitosamente!"}), 200
             else:
-                return jsonify({"msg": "Empresa no se encuentra en el sistema"}),400
+                return jsonify({"msg": "Empresa no se encuentra en el sistema"}), 400
 
-    ### Ingresar Empresa ###
+    # Ingresar Empresa
     if request.method == "POST":
         nombre = request.json.get("nombre", None)
         rut = request.json.get("rut", None)
@@ -196,21 +208,21 @@ def empresas(id = None):
         rubro = request.json.get("rubro", None)
 
         if not nombre:
-            return jsonify({"msg": "Nombre de empresa no puede estar vacío"}),400
+            return jsonify({"msg": "Nombre de empresa no puede estar vacío"}), 400
         if not rut:
-            return jsonify({"msg": "Rut de empresa no puede estar vacío"}),400
+            return jsonify({"msg": "Rut de empresa no puede estar vacío"}), 400
         if not razon_social:
-            return jsonify({"msg": "Razon Social de empresa no puede estar vacío"}),400
+            return jsonify({"msg": "Razon Social de empresa no puede estar vacío"}), 400
         if not rubro:
-            return jsonify({"msg": "Rubro de empresa no puede estar vacío"}),400
+            return jsonify({"msg": "Rubro de empresa no puede estar vacío"}), 400
         
-        validaRutExistente = Empresa.query.filter_by(rut = rut).first()
-        if validaRutExistente:
-            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}),401
+        valida_rut_existente = Empresa.query.filter_by(rut = rut).first()
+        if valida_rut_existente:
+            return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
 
-        validaRazonSocialExistente = Empresa.query.filter_by(razon_social = razon_social).first()
-        if validaRazonSocialExistente:
-            return jsonify({"msg": "Razon social de empresa ya se encuentra registrado"}),401
+        valida_razon_social_existente = Empresa.query.filter_by(razon_social = razon_social).first()
+        if valida_razon_social_existente:
+            return jsonify({"msg": "Razon social de empresa ya se encuentra registrado"}), 401
 
         empresa = Empresa()
         empresa.nombre = nombre
@@ -219,50 +231,51 @@ def empresas(id = None):
         empresa.rubro = rubro
         empresa.save()
 
-        return jsonify(empresa.serialize()),200
+        return jsonify(empresa.serialize()), 200
 
-    ### Actualizar Empresa by ID ###
+    # Actualizar Empresa by ID
     if request.method == "PUT":
         if id:
-            empresaActualizar = Empresa.query.get(id)
-            if not empresaActualizar:
-                return jsonify({"msg": "Empresa no se encuentra en el sistema"}),401
+            empresa_actualizar = Empresa.query.get(id)
+            if not empresa_actualizar:
+                return jsonify({"msg": "Empresa no se encuentra en el sistema"}), 401
 
             nombre = request.json.get("nombre", None)
             rut = request.json.get("rut", None)
             razon_social = request.json.get("razon_social", None)
             rubro = request.json.get("rubro", None)
 
-            rutOcupado = Empresa.query.filter_by(rut = rut).first()
-            if rutOcupado and rutOcupado.id != id:
-                return jsonify({"msg": "Rut ya se encuentra registrado."}),401
+            rut_ocupado = Empresa.query.filter_by(rut = rut).first()
+            if rut_ocupado and rut_ocupado.id != id:
+                return jsonify({"msg": "Rut ya se encuentra registrado."}), 401
 
-            razonSocialOcupado = Empresa.query.filter_by(razon_social = razon_social).first()
-            if razonSocialOcupado and razonSocialOcupado != id:
-                return jsonify({"msg" : "Razon social ya se encuentra registrada."}),401
+            razon_social_ocupado = Empresa.query.filter_by(razon_social = razon_social).first()
+            if razon_social_ocupado and razon_social_ocupado != id:
+                return jsonify({"msg" : "Razon social ya se encuentra registrada."}), 401
 
             if nombre is not None:
                 if not nombre:
-                    return jsonify({"msg": "Nombre no puede ir vacío"}),401
-                empresaActualizar.nombre = nombre
+                    return jsonify({"msg": "Nombre no puede ir vacío"}), 401
+                empresa_actualizar.nombre = nombre
             
             if rut is not None:
                 if not rut:
-                    return jsonify({"msg": "Rut no puede ir vacío"}),401
-                empresaActualizar.rut = rut
+                    return jsonify({"msg": "Rut no puede ir vacío"}), 401
+                empresa_actualizar.rut = rut
             
             if razon_social is not None:
                 if not razon_social:
-                    return jsonify({"msg": "Razon social no puede ir vacío"}),401
-                empresaActualizar.razon_social = razon_social
+                    return jsonify({"msg": "Razon social no puede ir vacío"}), 401
+                empresa_actualizar.razon_social = razon_social
             
             if rubro is not None:
                 if not rubro:
-                    return jsonify({"msg": "Rubro no puede ir vacío"}),401
-                empresaActualizar.rubro = rubro
+                    return jsonify({"msg": "Rubro no puede ir vacío"}), 401
+                empresa_actualizar.rubro = rubro
 
-            empresaActualizar.update()   
-            return jsonify(empresaActualizar.serialize()),200
+            empresa_actualizar.update()
+            return jsonify(empresa_actualizar.serialize()),200
+
 
 @app.route("/api/valida-Caja", methods=["POST"])
 @jwt_required
@@ -273,32 +286,28 @@ def valida_caja():
     print(password)
 
     if not administrador or not password:
-        return jsonify({"msg":"Faltan campos de Administrador"}),400
+        return jsonify({"msg":"Faltan campos de Administrador"}), 400
 
     admin_valido = Usuario.query.filter_by(codigo = administrador).first()
     if not admin_valido:
-        return jsonify({"msg": "Administrador inválido"}),400
+        return jsonify({"msg": "Administrador inválido"}), 400
     if admin_valido.rol != "Admin":
-        return jsonify({"msg": "Dato ingresado no figura como Administrador"}),400
-    if bcrypt.check_password_hash(admin_valido.password,password):
-        return jsonify({"msg": "Apertura Exitosa"}),200
+        return jsonify({"msg": "Dato ingresado no figura como Administrador"}), 400
+    if bcrypt.check_password_hash(admin_valido.password, password):
+        return jsonify({"msg": "Apertura Exitosa"}), 200
     else:
-        return jsonify({"msg": "Validación Administrador incorrecta"}),400
-    
-        
-     
+        return jsonify({"msg": "Validación Administrador incorrecta"}), 400
 
 
-
-@app.route("/api/usuarios", methods = ["GET","POST"])
-@app.route("/api/usuarios/<int:id>", methods = ["GET","DELETE", "PUT"])
+@app.route("/api/usuarios", methods=["GET", "POST"])
+@app.route("/api/usuarios/<int:id>", methods=["GET", "DELETE", "PUT"])
 @jwt_required
-def usuarios(id = None):
+def usuarios(id=None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
     current_user = get_jwt_identity()
 
-    ### Ver Usuarios ###
+    # Ver Usuarios
     if request.method == "GET":
         if id is None:
             usuarios = Usuario.query.all()
@@ -307,24 +316,24 @@ def usuarios(id = None):
             usuarios = list(map(lambda usuario: usuario.serialize(), usuarios))
             return jsonify(usuarios),200
 
-        ### Ver Usuario by ID ###
+        # Ver Usuario by ID
         else:
             usuario = Usuario.query.get(id)
             if not usuario:
-                return jsonify({"msg": "No se encuentra usuario."}),401
-            return jsonify(usuario.serialize()),200
+                return jsonify({"msg": "No se encuentra usuario."}), 401
+            return jsonify(usuario.serialize()), 200
 
-    ### Eliminar Usuario ###
+    # Eliminar Usuario
     if request.method == "DELETE":
         if id:
             usuario = Usuario.query.get(id)
             if usuario:
                 usuario.delete()
-                return jsonify({"msg": f"Usuario <{usuario.nombre}> eliminado exitosamente."}),200
+                return jsonify({"msg": f"Usuario <{usuario.nombre}> eliminado exitosamente."}), 200
             else:
-                return jsonify({"msg": "Usuario no se encuentra registrado."}),401
+                return jsonify({"msg": "Usuario no se encuentra registrado."}), 401
 
-    ### Insertar Usuario ###
+    # Insertar Usuario
     if request.method == "POST":        
         nombre = request.form.get("nombre", None)
         apellido = request.form.get("apellido", None)
@@ -333,7 +342,6 @@ def usuarios(id = None):
         email = request.form.get("email", None)
         password = request.form.get("password", None)
         foto = request.form.get("foto", None)
-        
 
         if not nombre:
             return jsonify({"msg":"Nombre no puede estar vacío"}), 401
@@ -357,7 +365,6 @@ def usuarios(id = None):
         if email_ocupado:
             return jsonify({"msg": "Email ya se encuentra registrado."}), 401
 
-
         filename = "without-photo.png"
         if 'foto' in request.files:
             file = request.files['foto']    
@@ -370,8 +377,6 @@ def usuarios(id = None):
             else:
                 return jsonify({"msg": "File Not Allowed!"}), 400 
 
-        
-        
         usuario = Usuario()
         usuario.nombre = nombre
         usuario.apellido = apellido
@@ -385,14 +390,14 @@ def usuarios(id = None):
         usuario.codigo = usuario.generaCodigo()
         usuario.update()
 
-        return jsonify(usuario.serialize()),200
+        return jsonify(usuario.serialize()), 200
 
-    ### Actualizar Usuario ###
+    # Actualizar Usuario
     if request.method == "PUT":
         if id:
             usuario_actualizar = Usuario.query.get(id)
             if not usuario_actualizar:
-                return jsonify({"msg": "Usuario no se encuentra registrado"}),401
+                return jsonify({"msg": "Usuario no se encuentra registrado"}), 401
             
             nombre = request.form.get("nombre", None)
             apellido = request.form.get("apellido", None)
@@ -407,50 +412,47 @@ def usuarios(id = None):
             elif status == "false":
                 status = False
 
-           
             rut_ocupado = Usuario.query.filter_by(rut = rut).first()
             if rut_ocupado and rut_ocupado.id != id:
-                return jsonify({"msg": "Rut ya se encuentra registrado."}),401
+                return jsonify({"msg": "Rut ya se encuentra registrado."}), 401
 
             email_ocupado = Usuario.query.filter_by(email = email).first()
             if email_ocupado and email_ocupado.id != id:
-                return jsonify({"msg": "Correo ya se encuentra registrado."}),401
+                return jsonify({"msg": "Correo ya se encuentra registrado."}), 401
 
             if nombre is not None:
                 if nombre == "":
-                    return jsonify({"msg": "Nombre no puede ir vacío."}),401
+                    return jsonify({"msg": "Nombre no puede ir vacío."}), 401
                 usuario_actualizar.nombre = nombre
 
             if apellido is not None:
                 if apellido == "":
-                    return jsonify({"msg": "Apellido no puede ir vacío."}),401
+                    return jsonify({"msg": "Apellido no puede ir vacío."}), 401
                 usuario_actualizar.apellido = apellido 
                 
             if rut is not None:
                 if rut == "":
-                    return jsonify({"msg": "Rut no puede ir vacío."}),401
+                    return jsonify({"msg": "Rut no puede ir vacío."}), 401
                 usuario_actualizar.rut = rut
 
             if rol is not None:
                 if rol == "":
-                    return jsonify({"msg": "Rol no puede ir vacío."}),401
+                    return jsonify({"msg": "Rol no puede ir vacío."}), 401
                 usuario_actualizar.rol = rol
 
             if email is not None:
                 if email == "":
-                    return jsonify({"msg": "Email no puede ir vacío"}),401
+                    return jsonify({"msg": "Email no puede ir vacío"}), 401
                 usuario_actualizar.email = email
 
-            #print(password.items())
             if password is not None:
                 if password == "":
-                    return jsonify({"msg": "Password no puede ir vacío."}),401
+                    return jsonify({"msg": "Password no puede ir vacío."}), 401
                 usuario_actualizar.password = bcrypt.generate_password_hash(password).decode("utf-8")
             if status is not None:
                 if status != False and status != True:
-                    return jsonify("Status debe ser true o false"),401
+                    return jsonify("Status debe ser true o false"), 401
                 usuario_actualizar.status = status
-
 
             #filename = "without-photo.png"
             if 'foto' in request.files:
@@ -466,53 +468,54 @@ def usuarios(id = None):
             
             usuario_actualizar.update()
             
-            return jsonify(usuario_actualizar.serialize()),200
- 
-@app.route("/api/entradas-inventario", methods =["GET", "POST"])
+            return jsonify(usuario_actualizar.serialize()), 200
+
+
+@app.route("/api/entradas-inventario", methods=["GET", "POST"])
 @app.route("/api/entradas-inventario/<int:id>", methods=["GET", "PUT"])
 @jwt_required
-def entrada_inventario(id = None):
+def entrada_inventario(id=None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
     current_user = get_jwt_identity()
 
-    ### VER TODAS LAS ENTRADAS DE INVENTARIO ###
+    # VER TODAS LAS ENTRADAS DE INVENTARIO
     if request.method =="GET":        
         if id is None:
             entradas = Entrada_Inventario.query.all()
             if entradas:
                 entradas = list(map(lambda entrada: entrada.serialize(),entradas))
-                return jsonify(entradas),200
+                return jsonify(entradas), 200
             else:
-                return jsonify({"msg": "No hay entradas disponibles."}),401
+                return jsonify({"msg": "No hay entradas disponibles."}), 401
 
-    ### VER UNA ENTRADA DE INVENTARIO POR ID ###
+    # VER UNA ENTRADA DE INVENTARIO POR ID
         entrada = Entrada_Inventario.query.get(id)
         if entrada:
-            return jsonify(entrada.serialize()),200
+            return jsonify(entrada.serialize()), 200
         else:
-            return jsonify({"msg": "No existe registro asociado."}),401
+            return jsonify({"msg": "No existe registro asociado."}), 401
     
-    ### INSERTAR UNA ENTRADA DE INVENTARIO POR ID ###
+    # INSERTAR UNA ENTRADA DE INVENTARIO POR ID
     if request.method == "POST":
         data = request.get_json()
 
         if data["cantidad"] <= 0:
-            return jsonify({"msg": "Cantidad debe ser mayor a 0"}),401
+            return jsonify({"msg": "Cantidad debe ser mayor a 0"}), 401
         if data["precio_costo_unitario"] <= 0:
-            return jsonify({"msg": "Precio costo debe ser mayor a 0"}),401
+            return jsonify({"msg": "Precio costo debe ser mayor a 0"}), 401
 
         entradaI = Entrada_Inventario()
         entradaI.cantidad = data["cantidad"]
         entradaI.precio_costo_unitario = data["precio_costo_unitario"]
         entradaI.costo_total = entradaI.genera_costo_total()
-        entradaI.usuario_id = 1 #Cambiar
-        entradaI.producto_id = 1 #cambiar
-        entradaI.factura_compra_id = 1 #Cambiar
+        entradaI.usuario_id = 1  # Cambiar
+        entradaI.producto_id = 1  # Cambiar
+        entradaI.factura_compra_id = 1  # Cambiar
         entradaI.save()
-        return jsonify({"msg": "Entrada guardada exitosamente."}),200
+        return jsonify({"msg": "Entrada guardada exitosamente."}), 200
 
-    ### ACTUALIZAR UNA ENTRADA DE INVENTARIO POR ID ###
+    # ACTUALIZAR UNA ENTRADA DE INVENTARIO POR ID
     if request.method == "PUT":
         entrada_actualizar = Entrada_Inventario.query.get(id)
         if not entrada_actualizar:
@@ -523,21 +526,22 @@ def entrada_inventario(id = None):
 
         if cantidad is not None:
             if cantidad < 0:
-                return jsonify({"msg": "Cantidad no puede ser menor a 0"}),401
+                return jsonify({"msg": "Cantidad no puede ser menor a 0"}), 401
             entrada_actualizar.cantidad = cantidad
         if precio_costo_unitario is not None:
             if precio_costo_unitario <= 0:
-                return jsonify({"msg": "Precio costo unitario no puede ser menor a 0"}),401
+                return jsonify({"msg": "Precio costo unitario no puede ser menor a 0"}), 401
             entrada_actualizar.precio_costo_unitario = precio_costo_unitario
             
         entrada_actualizar.costo_total = entrada_actualizar.genera_costo_total() 
         entrada_actualizar.update() 
-        return jsonify({"msg": "Producto modificado."}),200      
+        return jsonify({"msg": "Producto modificado."}), 200
 
-@app.route('/api/salidas-inventario', methods = ['GET', "POST"])
+
+@app.route('/api/salidas-inventario', methods=['GET', "POST"])
 @app.route("/api/salidas-inventario/<int:id>", methods=["GET", "PUT"])
 @jwt_required
-def salidas_inventario(id = None):
+def salidas_inventario(id=None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
     current_user = get_jwt_identity()
@@ -599,10 +603,11 @@ def salidas_inventario(id = None):
 
             return jsonify({"msg": "Salida de inventario modificada exitosamente"}), 201
 
-@app.route('/api/facturas-compras', methods = ['GET', "POST"])
+
+@app.route('/api/facturas-compras', methods=['GET', "POST"])
 @app.route("/api/facturas-compras/<int:id>", methods=["GET", 'PUT'])
 @jwt_required
-def facturas_compras(id = None):
+def facturas_compras(id=None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
     current_user = get_jwt_identity()
@@ -683,7 +688,7 @@ def facturas_compras(id = None):
 
         return jsonify({"msg": "Factura creada exitosamente."}), 201
 
-        # Modificacion factura
+    # Modificacion factura
     if request.method == 'PUT':
         data = request.get_json()
 
@@ -741,11 +746,10 @@ def facturas_compras(id = None):
             return jsonify({"msg" : "Factura modificada"}), 200
             
 
-
-@app.route('/api/productos', methods = ['GET', "POST"])
+@app.route('/api/productos', methods=['GET', "POST"])
 @app.route("/api/productos/<int:id>", methods=["GET", "PUT", "DELETE"])
 @jwt_required
-def productos(id = None):
+def productos(id=None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
     current_user = get_jwt_identity()
@@ -755,7 +759,7 @@ def productos(id = None):
         if id is None:
             productos = Producto.query.all()
             if productos:
-                productos = list(map(lambda producto: producto.serialize(),productos))
+                productos = list(map(lambda producto: producto.serialize(), productos))
                 return jsonify(productos), 200
             else:
                 return jsonify({"msg" : "No hay datos de productos"}), 400
@@ -791,10 +795,10 @@ def productos(id = None):
         producto_sku = Producto.query.filter_by(sku = data["sku"]).first()
 
         if producto_cb:
-            return jsonify({"msg" : "Codigo de barra ya existe"}),401
+            return jsonify({"msg" : "Codigo de barra ya existe"}), 401
   
         if producto_sku:
-            return jsonify({"msg" : "SKU ya existe"}),401
+            return jsonify({"msg" : "SKU ya existe"}), 401
         
         producto = Producto()
         producto.sku = data["sku"]
@@ -827,15 +831,16 @@ def productos(id = None):
     if request.method == 'DELETE':
         producto = Producto.query.get(id)
         if producto:
+            producto.delete()
             return jsonify({"msg" : "Producto eliminado exitosamente"}), 200
         else:
             return jsonify({"msg" : "Producto no encontrado"}), 400
-            producto.delete()
 
-@app.route("/api/documentos-venta", methods = ['GET', 'POST'])
-@app.route("/api/documentos-venta/<int:id>", methods = ['GET'])
+
+@app.route("/api/documentos-venta", methods=['GET', 'POST'])
+@app.route("/api/documentos-venta/<int:id>", methods=['GET'])
 @jwt_required
-def documentos_venta(id = None):
+def documentos_venta(id=None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
     current_user = get_jwt_identity()
@@ -874,7 +879,8 @@ def documentos_venta(id = None):
         
         documentos_venta = Documento_Venta.query.filter_by(numero_documento = data['datosVenta']["numero_documento"]).all()
 
-        documentos_venta = list(map(lambda documento_venta: documento_venta.serialize(), documentos_venta)) #DEVUELVE LISTA DE DICCIONARIOS CON MATCHES DE DOCUMENTOS DE VENTA
+        documentos_venta = list(map(lambda documento_venta: documento_venta.serialize(), documentos_venta))  #DEVUELVE
+        # LISTA DE DICCIONARIOS CON MATCHES DE DOCUMENTOS DE VENTA
 
         for documento in documentos_venta:
             if documento['numero_documento'] == int(data['datosVenta']["numero_documento"]) and documento['tipo_documento'] == data['datosVenta']["tipo_documento"]:
@@ -891,11 +897,11 @@ def documentos_venta(id = None):
         for detalle_producto in data['detalleProductos']:
             salida_inventario = Salida_Inventario()
             salida_inventario.cantidad = detalle_producto['cantidad']
-            salida_inventario.precio_costo_unitario = 1 #FALTA INGRESAR COSTO UNITARIO REAL
-            salida_inventario.precio_venta_unitario = detalle_producto['precio_venta_unitario'] / 1.19 #ELIMINAR DECIMALES?
-            salida_inventario.costo_total = 1 #FALTA INGRESAR COSTO TOTAL REAL
-            salida_inventario.venta_total = detalle_producto['total'] / 1.19 #ELIMINAR DECIMALES?
-            salida_inventario.usuario_id = 1 #FALTA CAPTURAR USUARIO REAL
+            salida_inventario.precio_costo_unitario = 1 # FALTA INGRESAR COSTO UNITARIO REAL
+            salida_inventario.precio_venta_unitario = detalle_producto['precio_venta_unitario'] / 1.19 # ELIMINAR DECIMALES?
+            salida_inventario.costo_total = 1 # FALTA INGRESAR COSTO TOTAL REAL
+            salida_inventario.venta_total = detalle_producto['total'] / 1.19 # ELIMINAR DECIMALES?
+            salida_inventario.usuario_id = 1 # FALTA CAPTURAR USUARIO REAL
             salida_inventario.producto_id = detalle_producto['producto_id']
 
             documento_venta.salidas_I.append(salida_inventario)
@@ -904,10 +910,11 @@ def documentos_venta(id = None):
         documento_venta.save()    
         return jsonify({"msg": f"{tipo_documento.capitalize()} creada exitosamente."}), 201
 
-@app.route("/api/proveedores", methods = ['GET', 'POST'])
-@app.route("/api/proveedores/<int:id>", methods = ['GET', 'PUT', 'DELETE'])
+
+@app.route("/api/proveedores", methods=['GET', 'POST'])
+@app.route("/api/proveedores/<int:id>", methods=['GET', 'PUT', 'DELETE'])
 @jwt_required
-def proveedores(id = None):
+def proveedores(id=None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
     current_user = get_jwt_identity()
@@ -983,8 +990,6 @@ def proveedores(id = None):
         cuenta_corriente = request.json.get("cuenta_corriente", None)
         banco = request.json.get("banco", None)
 
-         
-        
         check_rut = Proveedor.query.filter_by(rut = rut).first()
         if check_rut and check_rut.id != id:
             return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
@@ -1029,8 +1034,6 @@ def proveedores(id = None):
             proveedor.banco = banco
 
         proveedor.update()
-
-       
          
         return jsonify(proveedor.serialize()), 200
 
@@ -1039,14 +1042,15 @@ def proveedores(id = None):
         proveedor = Proveedor.query.get(id)
         if proveedor:
             proveedor.delete()
-            return jsonify({"msg": f"Proveedor <{proveedor.nombre}> eliminado exitosamente."}),200
+            return jsonify({"msg": f"Proveedor <{proveedor.nombre}> eliminado exitosamente."}), 200
         else:
-            return jsonify({"msg": "Proveedor no se encuentra registrado."}),400
+            return jsonify({"msg": "Proveedor no se encuentra registrado."}), 400
+
 
 @app.route('/api/categorias', methods=['GET', "POST"])
 @app.route('/api/categorias/<int:id>', methods=["GET", "PUT", "DELETE"])
 @jwt_required
-def categorias(id = None):
+def categorias(id=None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
     current_user = get_jwt_identity()
@@ -1057,14 +1061,14 @@ def categorias(id = None):
             if categorias:
                 categorias = list(map(lambda categoria: categoria.serialize(), categorias))
                 return jsonify (categorias),200
-            return jsonify({"msg": "No hay categorías Actualmente."}),400
+            return jsonify({"msg": "Actualmente no hay categorías"}), 400
         categoria = Categoria.query.get(id)
         if id:
             categoria = Categoria.query.get(id)
             if categoria:
-                return (categoria.serialize()),200
+                return (categoria.serialize()), 200
             else:
-                return jsonify({"msg": "categoria no encontrada"}),400 
+                return jsonify({"msg": "categoria no encontrada"}), 400
     
     if request.method == 'POST':
         nombre = request.json.get("nombre", None)
@@ -1085,21 +1089,22 @@ def categorias(id = None):
         nombre = request.json.get("nombre", None)
         
         if not nombre:
-            return jsonify({"msg": "Categoria no puede estar vacío"}),401
+            return jsonify({"msg": "Categoria no puede estar vacío"}), 401
                     
         categoria_update = Categoria.query.get(id)
         if not categoria_update:
-            return jsonify({"msg": "Categoria no se encuentra en el sistema"}),400
+            return jsonify({"msg": "Categoria no se encuentra en el sistema"}), 400
         
         categoria_update.nombre = nombre
         categoria_update.update()
         
-        return jsonify(categoria_update.serialize()),200
+        return jsonify(categoria_update.serialize()), 200
 
-@app.route("/api/cuadratura-caja", methods = ['GET', 'POST'])
-@app.route("/api/cuadratura-caja/<int:id>", methods = ['GET'])
+
+@app.route("/api/cuadratura-caja", methods=['GET', 'POST'])
+@app.route("/api/cuadratura-caja/<int:id>", methods=['GET'])
 @jwt_required
-def cuadratura_caja(id = None):
+def cuadratura_caja(id=None):
 
     # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
     current_user = get_jwt_identity()
@@ -1149,8 +1154,7 @@ def cuadratura_caja(id = None):
         if not data["diferencia_en_caja"]:
             return jsonify({"msg" : "por favor ingresar diferencia en caja"}), 401
 
-                
-        cuadratura_caja = cuadratura_caja()
+        cuadratura_caja = Cuadratura_Caja()
         cuadratura_caja.usuario_id = data["usuario_id"]
         cuadratura_caja.admin_id = data["admin_id"]
         cuadratura_caja.fecha_apertura = datetime.strptime(data["fecha_apertura"], '%Y-%m-%d %H:%M:%S')
@@ -1166,49 +1170,15 @@ def cuadratura_caja(id = None):
        
         return jsonify({"msg": "cuadratura de caja creada exitosamente"}), 201
 
-@app.route("/api/stock", methods = ['GET'])
+
+@app.route('/api/stock', methods=['GET'])
+@jwt_required
 def stock():
-
-    total_entradas = db.session.query(Entrada_Inventario.producto_id, db.func.sum(Entrada_Inventario.cantidad)).group_by(Entrada_Inventario.producto_id).all()
-
-    total_salidas = db.session.query(Salida_Inventario.producto_id, db.func.sum(Salida_Inventario.cantidad)).group_by(Salida_Inventario.producto_id).all()
-
-
-    compras_por_producto_id = []
-    for total_entrada in total_entradas:
-        compras_por_producto_id.append({"producto_id": total_entrada[0], "total_entrada": total_entrada[1]})
-
-    ventas_por_producto_id = []
-    for total_salida in total_salidas:
-        ventas_por_producto_id.append({"producto_id": total_salida[0], "total_salida": total_salida[1]})
-
-
-    total_stock = []
-    for compra in compras_por_producto_id:
-        for venta in ventas_por_producto_id:
-            if compra['producto_id'] == venta['producto_id']:
-                total = compra['total_entrada'] - venta['total_salida']
-                total_stock.append({"producto_id": compra['producto_id'], "total": total})
-
-
-    return jsonify(compras_por_producto_id, ventas_por_producto_id), 200
-
-@app.route('/api/test-producto', methods = ['GET'])
-def test_producto():
-
     productos = Producto.query.all()
     productos = list(map(lambda producto: producto.serialize_stock(), productos))
-
-
-
 
     return jsonify(productos), 200
 
 
-
-
-
 if __name__ == "__main__":
     manager.run()
-
-    
