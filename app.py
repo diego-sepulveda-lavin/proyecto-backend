@@ -173,16 +173,14 @@ def login():
 @jwt_required
 def empresas(id=None):
 
-    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-
     # Ver Empresas
     if request.method == 'GET':
         if not id:
             empresas = Empresa.query.all()
             if not empresas:
                 return jsonify({"msg": "No hay empresas registradas."})
-            empresas = list(map(lambda empresa: empresa.serialize(),empresas))
-            return jsonify(empresas),200
+            empresas = list(map(lambda empresa: empresa.serialize(), empresas))
+            return jsonify(empresas), 200
 
     # Ver Empresa por ID
         empresa = Empresa.query.get(id)
@@ -193,7 +191,7 @@ def empresas(id=None):
     # Eliminar Empresa por ID
     if request.method == "DELETE":
         if id:
-            empresa= Empresa.query.get(id)
+            empresa = Empresa.query.get(id)
             if empresa:
                 empresa.delete()
                 return jsonify({"msg": f"Empresa <{empresa.nombre}> eliminada exitosamente!"}), 200
@@ -216,11 +214,11 @@ def empresas(id=None):
         if not rubro:
             return jsonify({"msg": "Rubro de empresa no puede estar vacío"}), 400
         
-        valida_rut_existente = Empresa.query.filter_by(rut = rut).first()
+        valida_rut_existente = Empresa.query.filter_by(rut=rut).first()
         if valida_rut_existente:
             return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
 
-        valida_razon_social_existente = Empresa.query.filter_by(razon_social = razon_social).first()
+        valida_razon_social_existente = Empresa.query.filter_by(razon_social=razon_social).first()
         if valida_razon_social_existente:
             return jsonify({"msg": "Razon social de empresa ya se encuentra registrado"}), 401
 
@@ -245,13 +243,13 @@ def empresas(id=None):
             razon_social = request.json.get("razon_social", None)
             rubro = request.json.get("rubro", None)
 
-            rut_ocupado = Empresa.query.filter_by(rut = rut).first()
+            rut_ocupado = Empresa.query.filter_by(rut=rut).first()
             if rut_ocupado and rut_ocupado.id != id:
                 return jsonify({"msg": "Rut ya se encuentra registrado."}), 401
 
-            razon_social_ocupado = Empresa.query.filter_by(razon_social = razon_social).first()
+            razon_social_ocupado = Empresa.query.filter_by(razon_social=razon_social).first()
             if razon_social_ocupado and razon_social_ocupado != id:
-                return jsonify({"msg" : "Razon social ya se encuentra registrada."}), 401
+                return jsonify({"msg": "Razon social ya se encuentra registrada."}), 401
 
             if nombre is not None:
                 if not nombre:
@@ -274,7 +272,7 @@ def empresas(id=None):
                 empresa_actualizar.rubro = rubro
 
             empresa_actualizar.update()
-            return jsonify(empresa_actualizar.serialize()),200
+            return jsonify(empresa_actualizar.serialize()), 200
 
 
 @app.route("/api/valida-Caja", methods=["POST"])
@@ -286,9 +284,9 @@ def valida_caja():
     print(password)
 
     if not administrador or not password:
-        return jsonify({"msg":"Faltan campos de Administrador"}), 400
+        return jsonify({"msg": "Faltan campos de Administrador"}), 400
 
-    admin_valido = Usuario.query.filter_by(codigo = administrador).first()
+    admin_valido = Usuario.query.filter_by(codigo=administrador).first()
     if not admin_valido:
         return jsonify({"msg": "Administrador inválido"}), 400
     if admin_valido.rol != "Admin":
@@ -304,9 +302,6 @@ def valida_caja():
 @jwt_required
 def usuarios(id=None):
 
-    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-    current_user = get_jwt_identity()
-
     # Ver Usuarios
     if request.method == "GET":
         if id is None:
@@ -314,7 +309,7 @@ def usuarios(id=None):
             if not usuarios:
                 return jsonify({"msg": "No hay usuarios"})
             usuarios = list(map(lambda usuario: usuario.serialize(), usuarios))
-            return jsonify(usuarios),200
+            return jsonify(usuarios), 200
 
         # Ver Usuario by ID
         else:
@@ -341,27 +336,27 @@ def usuarios(id=None):
         rol = request.form.get("rol", None)
         email = request.form.get("email", None)
         password = request.form.get("password", None)
-        foto = request.form.get("foto", None)
+        # foto = request.form.get("foto", None)
 
         if not nombre:
-            return jsonify({"msg":"Nombre no puede estar vacío"}), 401
+            return jsonify({"msg": "Nombre no puede estar vacío"}), 401
         if not apellido:
-            return jsonify({"msg":"Apellido no puede estar vacío"}), 401
+            return jsonify({"msg": "Apellido no puede estar vacío"}), 401
         if not rut:
-            return jsonify({"msg":"Rut no puede estar vacío"}), 401
+            return jsonify({"msg": "Rut no puede estar vacío"}), 401
         if not rol:
-            return jsonify({"msg":"Rol no puede estar vacío"}), 401
+            return jsonify({"msg": "Rol no puede estar vacío"}), 401
         if not email:
-            return jsonify({"msg":"Email no puede estar vacío"}), 401
+            return jsonify({"msg": "Email no puede estar vacío"}), 401
         if not password:
-            return jsonify({"msg":"Password no puede estar vacío"}), 401
-        #if not data["empresa_id"]:
+            return jsonify({"msg": "Password no puede estar vacío"}), 401
+        # if not data["empresa_id"]:
         #    return jsonify({"msg":"Empresa_id no puede estar vacío"}),401
         
-        rut_ocupado = Usuario.query.filter_by(rut = rut).first()
+        rut_ocupado = Usuario.query.filter_by(rut=rut).first()
         if rut_ocupado:
             return jsonify({"msg": "Rut ya se encuentra registrado."}), 401
-        email_ocupado= Usuario.query.filter_by(email = email).first()
+        email_ocupado = Usuario.query.filter_by(email=email).first()
         if email_ocupado:
             return jsonify({"msg": "Email ya se encuentra registrado."}), 401
 
@@ -412,11 +407,11 @@ def usuarios(id=None):
             elif status == "false":
                 status = False
 
-            rut_ocupado = Usuario.query.filter_by(rut = rut).first()
+            rut_ocupado = Usuario.query.filter_by(rut=rut).first()
             if rut_ocupado and rut_ocupado.id != id:
                 return jsonify({"msg": "Rut ya se encuentra registrado."}), 401
 
-            email_ocupado = Usuario.query.filter_by(email = email).first()
+            email_ocupado = Usuario.query.filter_by(email=email).first()
             if email_ocupado and email_ocupado.id != id:
                 return jsonify({"msg": "Correo ya se encuentra registrado."}), 401
 
@@ -454,7 +449,7 @@ def usuarios(id=None):
                     return jsonify("Status debe ser true o false"), 401
                 usuario_actualizar.status = status
 
-            #filename = "without-photo.png"
+            # filename = "without-photo.png"
             if 'foto' in request.files:
                 file = request.files['foto']    
                 if file and allowed_images_file(file.filename):
@@ -476,15 +471,12 @@ def usuarios(id=None):
 @jwt_required
 def entrada_inventario(id=None):
 
-    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-    current_user = get_jwt_identity()
-
     # VER TODAS LAS ENTRADAS DE INVENTARIO
-    if request.method =="GET":        
+    if request.method == "GET":
         if id is None:
             entradas = Entrada_Inventario.query.all()
             if entradas:
-                entradas = list(map(lambda entrada: entrada.serialize(),entradas))
+                entradas = list(map(lambda entrada: entrada.serialize(), entradas))
                 return jsonify(entradas), 200
             else:
                 return jsonify({"msg": "No hay entradas disponibles."}), 401
@@ -505,14 +497,14 @@ def entrada_inventario(id=None):
         if data["precio_costo_unitario"] <= 0:
             return jsonify({"msg": "Precio costo debe ser mayor a 0"}), 401
 
-        entradaI = Entrada_Inventario()
-        entradaI.cantidad = data["cantidad"]
-        entradaI.precio_costo_unitario = data["precio_costo_unitario"]
-        entradaI.costo_total = entradaI.genera_costo_total()
-        entradaI.usuario_id = 1  # Cambiar
-        entradaI.producto_id = 1  # Cambiar
-        entradaI.factura_compra_id = 1  # Cambiar
-        entradaI.save()
+        entrada_inventario = Entrada_Inventario()
+        entrada_inventario.cantidad = data["cantidad"]
+        entrada_inventario.precio_costo_unitario = data["precio_costo_unitario"]
+        entrada_inventario.costo_total = entrada_inventario.genera_costo_total()
+        entrada_inventario.usuario_id = 1  # Cambiar
+        entrada_inventario.producto_id = 1  # Cambiar
+        entrada_inventario.factura_compra_id = 1  # Cambiar
+        entrada_inventario.save()
         return jsonify({"msg": "Entrada guardada exitosamente."}), 200
 
     # ACTUALIZAR UNA ENTRADA DE INVENTARIO POR ID
@@ -543,50 +535,47 @@ def entrada_inventario(id=None):
 @jwt_required
 def salidas_inventario(id=None):
 
-    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-    current_user = get_jwt_identity()
-
     # Devuelve listado de todas las salidas de inventario por ventas
     if request.method == 'GET':
         if id is None:
             salidas_inventario = Salida_Inventario.query.all()
             if salidas_inventario:
-                salidas_inventario = list(map(lambda salida_inventario: salida_inventario.serialize(),salidas_inventario))
+                salidas_inventario = list(map(lambda salida_inventario: salida_inventario.serialize(), salidas_inventario))
                 return jsonify(salidas_inventario), 200
             else:
-                return jsonify({"msg" : "No hay registro de ventas"}), 400
+                return jsonify({"msg": "No hay registro de ventas"}), 400
         if id is not None:
             salida_inventario = Salida_Inventario.query.get(id)
             if salida_inventario:
                 return jsonify(salida_inventario.serialize()), 200
             else:
-                return jsonify({"msg" : "Registro de venta no encontrado"}), 400
+                return jsonify({"msg": "Registro de venta no encontrado"}), 400
 
     # Registro de salida de producto por venta
     if request.method == 'POST':
         data = request.get_json()
         if not data["cantidad"]:
-            return jsonify({"msg" : "Cantidad del producto no puede estar vacia"}), 401
+            return jsonify({"msg": "Cantidad del producto no puede estar vacia"}), 401
         
         if not data["precio_costo_unitario"]:
-            return jsonify({"msg" : "Precio Costo Unitario del producto no puede estar vacio"}), 401
+            return jsonify({"msg": "Precio Costo Unitario del producto no puede estar vacio"}), 401
         
         if not data["usuario_id"]:
-            return jsonify({"msg" : "Usuario Id no puede estar vacio"}), 401
+            return jsonify({"msg": "Usuario Id no puede estar vacio"}), 401
         
         if not data["producto_id"]:
-            return jsonify({"msg" : "Producto Id no puede estar vacio"}), 401
+            return jsonify({"msg": "Producto Id no puede estar vacio"}), 401
         
         if not data["documento_venta_id"]:
-            return jsonify({"msg" : "Documento de Venta Id no puede estar vacio"}), 401
+            return jsonify({"msg": "Documento de Venta Id no puede estar vacio"}), 401
 
         salida_inventario = Salida_Inventario()
         salida_inventario.cantidad = data["cantidad"]
         salida_inventario.precio_costo_unitario = data["precio_costo_unitario"]
-        salida_inventario.costo_total = salida_inventario.genera_costo_total() #MULTIPLICACION DE CANTIDAD POR COSTO
-        salida_inventario.usuario_id = data["usuario_id"] #revisar porque es una FK
-        salida_inventario.producto_id = data["producto_id"] #revisar porque es una FK
-        salida_inventario.documento_venta_id = data["documento_venta_id"] #revisar porque es una FK
+        salida_inventario.costo_total = salida_inventario.genera_costo_total()  # MULTIPLICACION DE CANTIDAD POR COSTO
+        salida_inventario.usuario_id = data["usuario_id"]  # revisar porque es una FK
+        salida_inventario.producto_id = data["producto_id"]  # revisar porque es una FK
+        salida_inventario.documento_venta_id = data["documento_venta_id"]  # revisar porque es una FK
         salida_inventario.save()
 
         return jsonify({"msg": "Venta efectuada exitosamente"}), 201
@@ -594,7 +583,7 @@ def salidas_inventario(id=None):
     if request.method == 'PUT':
         salida_inventario = Salida_Inventario.query.get(id)
         if not salida_inventario:
-            return jsonify({"msg" : "Salidad de inventario no encontrada"}), 400
+            return jsonify({"msg": "Salidad de inventario no encontrada"}), 400
         else:
             valor_cantidad = request.json.get("cantidad", None)
             
@@ -609,58 +598,56 @@ def salidas_inventario(id=None):
 @jwt_required
 def facturas_compras(id=None):
 
-    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-    current_user = get_jwt_identity()
-
     # Devuelve todas las facturas registradas
     if request.method == 'GET':
         if id is None:
             facturas_compras = Factura_Compra.query.all()
             if facturas_compras:
-                facturas_compras = list(map(lambda factura_compra: factura_compra.serialize(),facturas_compras))
+                facturas_compras = list(map(lambda factura_compra: factura_compra.serialize(), facturas_compras))
                 return jsonify(facturas_compras), 200
             else:
-                return jsonify({"msg" : "No hay datos de facturas"}), 400
+                return jsonify({"msg": "No hay datos de facturas"}), 400
         if id is not None:
             factura_compra = Factura_Compra.query.get(id)
             if factura_compra:
                 return jsonify(factura_compra.serialize()), 200
             else:
-                return jsonify({"msg" : "Factura no encontrada"}), 400
+                return jsonify({"msg": "Factura no encontrada"}), 400
 
     # Ingreso de nueva factura
     if request.method == 'POST':
         data = request.get_json()
 
         if not data["factura"]["folio"]:
-            return jsonify({"msg" : "Folio de nueva factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Folio de nueva factura no puede estar vacio"}), 401
         
         if not data["factura"]["fecha_emision"]:
-            return jsonify({"msg" : "Fecha de emisión de nueva factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Fecha de emisión de nueva factura no puede estar vacio"}), 401
         
         if not data["factura"]["fecha_recepcion"]:
-            return jsonify({"msg" : "Fecha de recepción de nueva factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Fecha de recepción de nueva factura no puede estar vacio"}), 401
         
         if not float(data["factura"]["monto_neto"]):
-            return jsonify({"msg" : "Monto Neto de nueva factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Monto Neto de nueva factura no puede estar vacio"}), 401
         
         if not float(data["factura"]["monto_iva"]):
-            return jsonify({"msg" : "Monto IVA de nueva factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Monto IVA de nueva factura no puede estar vacio"}), 401
         
-        if not float(data["factura"]["monto_otros_impuestos"]) >=0:
-            return jsonify({"msg" : "Monto de otros Impuestos de nueva factura no puede estar vacio"}), 401
+        if not float(data["factura"]["monto_otros_impuestos"]) >= 0:
+            return jsonify({"msg": "Monto de otros Impuestos de nueva factura no puede estar vacio"}), 401
         
         if not float(data["factura"]["monto_total"]):
-            return jsonify({"msg" : "Monto Total de nueva factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Monto Total de nueva factura no puede estar vacio"}), 401
         
         if not data["factura"]["proveedor_id"]:
-            return jsonify({"msg" : "Id proveedor no puede estar vacio"}), 401
+            return jsonify({"msg": "Id proveedor no puede estar vacio"}), 401
 
-        facturas_compras = Factura_Compra.query.filter_by(folio = data["factura"]["folio"]).all() # Se debe verificar forma de no repetir ingreso de factura
+        facturas_compras = Factura_Compra.query.filter_by(folio=data["factura"]["folio"]).all()  # Se debe verificar
+        # forma de no repetir ingreso de factura
         facturas_compras = list(map(lambda factura_compra: factura_compra.serialize(), facturas_compras))
         for factura in facturas_compras:
             if factura["folio"] == data["factura"]["folio"] and factura["proveedor_id"] == data["facturas"]["proveedor_id"]:
-                return jsonify({"msg" : "Factura ya existe"})
+                return jsonify({"msg": "Factura ya existe"})
 
         timestr = time.strftime(" %H:%M:%S")
         factura_compra = Factura_Compra()
@@ -679,7 +666,7 @@ def facturas_compras(id=None):
             entrada_inventario.precio_costo_unitario = entrada_inv["precio_costo_unitario"]
             entrada_inventario.costo_total = entrada_inv["costo_total"]
             entrada_inventario.usuario_id = entrada_inv["usuario_id"]
-            #entrada_inventario.factura_compra_id = factura_compra.id 
+            # entrada_inventario.factura_compra_id = factura_compra.id
             entrada_inventario.producto_id = entrada_inv["producto_id"]
 
             factura_compra.entradas_I.append(entrada_inventario)
@@ -693,32 +680,32 @@ def facturas_compras(id=None):
         data = request.get_json()
 
         if not data["folio"]:
-            return jsonify({"msg" : "Folio de factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Folio de factura no puede estar vacio"}), 401
 
         if not data["fecha_emision"]:
-            return jsonify({"msg" : "Fecha de emisión de factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Fecha de emisión de factura no puede estar vacio"}), 401
 
         if not data["fecha_recepcion"]:
-            return jsonify({"msg" : "Fecha de recepción de factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Fecha de recepción de factura no puede estar vacio"}), 401
 
         if not data["monto_neto"]:
-            return jsonify({"msg" : "Monto Neto de factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Monto Neto de factura no puede estar vacio"}), 401
 
         if not data["monto_iva"]:
-            return jsonify({"msg" : "Monto IVA de factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Monto IVA de factura no puede estar vacio"}), 401
         
         if not data["monto_otros_impuestos"] and data["monto_otros_impuestos"] != 0:
-            return jsonify({"msg" : "Monto de otros Impuestos de factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Monto de otros Impuestos de factura no puede estar vacio"}), 401
         
         if not data["monto_total"]:
-            return jsonify({"msg" : "Monto Total de factura no puede estar vacio"}), 401
+            return jsonify({"msg": "Monto Total de factura no puede estar vacio"}), 401
 
         if not data["proveedor_id"]:
-            return jsonify({"msg" : "Id proveedor no puede estar vacio"}), 401
+            return jsonify({"msg": "Id proveedor no puede estar vacio"}), 401
 
-        factura_a_modificar = Factura_Compra.query.get(id) # Se busca factura a modificar en DB
+        factura_a_modificar = Factura_Compra.query.get(id)  # Se busca factura a modificar en DB
         if not factura_a_modificar:
-            return jsonify({"msg" : "Factura no encontrada"}), 401
+            return jsonify({"msg": "Factura no encontrada"}), 401
         if factura_a_modificar:
             factura_a_modificar.folio = data["folio"]
             factura_a_modificar.fecha_emision = data["fecha_emision"]+time.strftime(" %H:%M:%S")
@@ -729,7 +716,7 @@ def facturas_compras(id=None):
             factura_a_modificar.monto_total = data["monto_total"]
             factura_a_modificar.proveedor_id = data['proveedor_id']
 
-            entradas_inventario = Entrada_Inventario.query.filter_by(factura_compra_id = id).all()
+            entradas_inventario = Entrada_Inventario.query.filter_by(factura_compra_id=id).all()
             for entrada_inventario in entradas_inventario:
                 db.session.delete(entrada_inventario)
 
@@ -743,16 +730,13 @@ def facturas_compras(id=None):
                 factura_a_modificar.entradas_I.append(entrada_inventario)
 
             factura_a_modificar.update()
-            return jsonify({"msg" : "Factura modificada"}), 200
+            return jsonify({"msg": "Factura modificada"}), 200
             
 
 @app.route('/api/productos', methods=['GET', "POST"])
 @app.route("/api/productos/<int:id>", methods=["GET", "PUT", "DELETE"])
 @jwt_required
 def productos(id=None):
-
-    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-    current_user = get_jwt_identity()
 
     # Devuelve listado de todos los productos
     if request.method == 'GET':
@@ -762,43 +746,41 @@ def productos(id=None):
                 productos = list(map(lambda producto: producto.serialize(), productos))
                 return jsonify(productos), 200
             else:
-                return jsonify({"msg" : "No hay datos de productos"}), 400
+                return jsonify({"msg": "No hay datos de productos"}), 400
         if id is not None:
             producto = Producto.query.get(id)
             if producto:
                 return jsonify(producto.serialize()), 200
             else:
-                return jsonify({"msg" : "Producto no encontrado"}), 400
+                return jsonify({"msg": "Producto no encontrado"}), 400
 
     # Creación de un nuevo producto
     if request.method == 'POST':
         data = request.get_json()
         if not str(data["sku"]):
-            return jsonify({"msg" : "SKU del producto nuevo no puede estar vacio"}), 401
+            return jsonify({"msg": "SKU del producto nuevo no puede estar vacio"}), 401
         
         if not data["descripcion"]:
-            return jsonify({"msg" : "Descripcion del producto nuevo no puede estar vacio"}), 401
+            return jsonify({"msg": "Descripcion del producto nuevo no puede estar vacio"}), 401
         
         if not data["codigo_barra"]:
-            return jsonify({"msg" : "Codigo de Barra del producto nuevo no puede estar vacio"}), 401
+            return jsonify({"msg": "Codigo de Barra del producto nuevo no puede estar vacio"}), 401
         
         if not data["unidad_entrega"]:
-            return jsonify({"msg" : "Unidad de Entrega del producto nuevo no puede estar vacio"}), 401
+            return jsonify({"msg": "Unidad de Entrega del producto nuevo no puede estar vacio"}), 401
         
         if not data["categoria_id"]:
-            return jsonify({"msg" : "Seleccione Categoría"}), 401
-        
+            return jsonify({"msg": "Seleccione Categoría"}), 401
 
-
-        producto_cb = Producto.query.filter_by(codigo_barra = data["codigo_barra"]).first()
-        producto_desc = Producto.query.filter_by(descripcion = data["descripcion"]).first()
-        producto_sku = Producto.query.filter_by(sku = data["sku"]).first()
+        producto_cb = Producto.query.filter_by(codigo_barra=data["codigo_barra"]).first()
+        producto_desc = Producto.query.filter_by(descripcion=data["descripcion"]).first()
+        producto_sku = Producto.query.filter_by(sku=data["sku"]).first()
 
         if producto_cb:
-            return jsonify({"msg" : "Codigo de barra ya existe"}), 401
+            return jsonify({"msg": "Codigo de barra ya existe"}), 401
   
         if producto_sku:
-            return jsonify({"msg" : "SKU ya existe"}), 401
+            return jsonify({"msg": "SKU ya existe"}), 401
         
         producto = Producto()
         producto.sku = data["sku"]
@@ -806,7 +788,7 @@ def productos(id=None):
         producto.codigo_barra = data["codigo_barra"]
         producto.unidad_entrega = data["unidad_entrega"]
         producto.precio_venta_unitario = data["precio_venta_unitario"]
-        producto.categoria_id = data["categoria_id"] #revisar porque es una FK
+        producto.categoria_id = data["categoria_id"]  # revisar porque es una FK
         producto.save()
        
         return jsonify(producto.serialize()), 200
@@ -815,7 +797,7 @@ def productos(id=None):
     if request.method == 'PUT':
         producto = Producto.query.get(id)
         if not producto:
-            return jsonify({"msg" : "Producto no encontrado"}), 400
+            return jsonify({"msg": "Producto no encontrado"}), 400
         else:
             valor_descripcion = request.json.get("descripcion", None)
             valor_cantidad = request.json.get("cantidad", None)
@@ -832,18 +814,15 @@ def productos(id=None):
         producto = Producto.query.get(id)
         if producto:
             producto.delete()
-            return jsonify({"msg" : "Producto eliminado exitosamente"}), 200
+            return jsonify({"msg": "Producto eliminado exitosamente"}), 200
         else:
-            return jsonify({"msg" : "Producto no encontrado"}), 400
+            return jsonify({"msg": "Producto no encontrado"}), 400
 
 
 @app.route("/api/documentos-venta", methods=['GET', 'POST'])
 @app.route("/api/documentos-venta/<int:id>", methods=['GET'])
 @jwt_required
 def documentos_venta(id=None):
-
-    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-    current_user = get_jwt_identity()
 
     if request.method == 'GET':
         # DEVUELVE LISTADO CON TODOS LOS DOCUMENTOS DE VENTA
@@ -877,9 +856,9 @@ def documentos_venta(id=None):
         if not data['datosVenta']["forma_pago"]:
             return jsonify({"msg": "Forma de Pago no puede estar vacío"}), 401
         
-        documentos_venta = Documento_Venta.query.filter_by(numero_documento = data['datosVenta']["numero_documento"]).all()
+        documentos_venta = Documento_Venta.query.filter_by(numero_documento=data['datosVenta']["numero_documento"]).all()
 
-        documentos_venta = list(map(lambda documento_venta: documento_venta.serialize(), documentos_venta))  #DEVUELVE
+        documentos_venta = list(map(lambda documento_venta: documento_venta.serialize(), documentos_venta))  # DEVUELVE
         # LISTA DE DICCIONARIOS CON MATCHES DE DOCUMENTOS DE VENTA
 
         for documento in documentos_venta:
@@ -897,11 +876,11 @@ def documentos_venta(id=None):
         for detalle_producto in data['detalleProductos']:
             salida_inventario = Salida_Inventario()
             salida_inventario.cantidad = detalle_producto['cantidad']
-            salida_inventario.precio_costo_unitario = 1 # FALTA INGRESAR COSTO UNITARIO REAL
-            salida_inventario.precio_venta_unitario = detalle_producto['precio_venta_unitario'] / 1.19 # ELIMINAR DECIMALES?
-            salida_inventario.costo_total = 1 # FALTA INGRESAR COSTO TOTAL REAL
-            salida_inventario.venta_total = detalle_producto['total'] / 1.19 # ELIMINAR DECIMALES?
-            salida_inventario.usuario_id = 1 # FALTA CAPTURAR USUARIO REAL
+            salida_inventario.precio_costo_unitario = 1  # FALTA INGRESAR COSTO UNITARIO REAL
+            salida_inventario.precio_venta_unitario = detalle_producto['precio_venta_unitario'] / 1.19  # ELIMINAR DECIMALES?
+            salida_inventario.costo_total = 1  # FALTA INGRESAR COSTO TOTAL REAL
+            salida_inventario.venta_total = detalle_producto['total'] / 1.19  # ELIMINAR DECIMALES?
+            salida_inventario.usuario_id = 1  # FALTA CAPTURAR USUARIO REAL
             salida_inventario.producto_id = detalle_producto['producto_id']
 
             documento_venta.salidas_I.append(salida_inventario)
@@ -916,9 +895,6 @@ def documentos_venta(id=None):
 @jwt_required
 def proveedores(id=None):
 
-    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-    current_user = get_jwt_identity()
-    
     if request.method == 'GET':
         # DEVUELVE LISTADO CON TODOS LOS PROVEEDORES
         if not id:
@@ -957,12 +933,12 @@ def proveedores(id=None):
         if not direccion:
             return jsonify({"msg": "Dirección no puede estar vacío"}), 401
         
-        check_rut = Proveedor.query.filter_by(rut = rut).first()
+        check_rut = Proveedor.query.filter_by(rut=rut).first()
         if check_rut:
             return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
-        check_razon_social = Proveedor.query.filter_by(razon_social = razon_social).first()
+        check_razon_social = Proveedor.query.filter_by(razon_social=razon_social).first()
         if check_razon_social:
-            return jsonify({"msg":"Razon social de empresa ya se encuentra registrado"}), 401
+            return jsonify({"msg": "Razon social de empresa ya se encuentra registrado"}), 401
 
         proveedor = Proveedor()
         proveedor.nombre = nombre
@@ -990,16 +966,16 @@ def proveedores(id=None):
         cuenta_corriente = request.json.get("cuenta_corriente", None)
         banco = request.json.get("banco", None)
 
-        check_rut = Proveedor.query.filter_by(rut = rut).first()
+        check_rut = Proveedor.query.filter_by(rut=rut).first()
         if check_rut and check_rut.id != id:
             return jsonify({"msg": "Rut de empresa ya se encuentra registrado"}), 401
 
-        check_razon_social = Proveedor.query.filter_by(razon_social = razon_social).first()
+        check_razon_social = Proveedor.query.filter_by(razon_social=razon_social).first()
         if check_razon_social and check_razon_social.id != id:
-            return jsonify({"msg":"Razon social de empresa ya se encuentra registrada"}), 401
+            return jsonify({"msg": "Razon social de empresa ya se encuentra registrada"}), 401
 
-        #check_razon_social = Proveedor.query.filter_by(razon_social = razon_social).first()
-        #if check_razon_social and razon_social is not None:
+        # check_razon_social = Proveedor.query.filter_by(razon_social = razon_social).first()
+        # if check_razon_social and razon_social is not None:
         #    return jsonify({"msg":"Razon social de empresa ya se encuentra registrada"}), 401
 
         if nombre is not None:
@@ -1051,16 +1027,12 @@ def proveedores(id=None):
 @app.route('/api/categorias/<int:id>', methods=["GET", "PUT", "DELETE"])
 @jwt_required
 def categorias(id=None):
-
-    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-    current_user = get_jwt_identity()
-
     if request.method == 'GET':
         if not id:
             categorias = Categoria.query.all()
             if categorias:
                 categorias = list(map(lambda categoria: categoria.serialize(), categorias))
-                return jsonify (categorias),200
+                return jsonify(categorias), 200
             return jsonify({"msg": "Actualmente no hay categorías"}), 400
         categoria = Categoria.query.get(id)
         if id:
@@ -1074,7 +1046,7 @@ def categorias(id=None):
         nombre = request.json.get("nombre", None)
         if not nombre:
             return jsonify({"msg": "por favor ingresar nombre de categoria valido"})
-        name_overlapped = Categoria.query.filter_by(nombre = nombre).first()
+        name_overlapped = Categoria.query.filter_by(nombre=nombre).first()
         if name_overlapped:
             return jsonify({"msg": "Categoria ya existe"})
 
@@ -1106,9 +1078,6 @@ def categorias(id=None):
 @jwt_required
 def cuadratura_caja(id=None):
 
-    # OBTENER IDENTIDAD DE USUARIO ACTUAL MEDIANTE JTW
-    current_user = get_jwt_identity()
-
     if request.method == 'GET':
         if not id:
             cuadraturas_cajas = Cuadratura_Caja.query.all()
@@ -1125,34 +1094,34 @@ def cuadratura_caja(id=None):
     if request.method == 'POST':
         data = request.get_json()
         if not data["usuario_id"]:
-            return jsonify({"msg" : "por favor ingresar user_id"}), 401
+            return jsonify({"msg": "por favor ingresar user_id"}), 401
         
         if not data["admin_id"]:
-            return jsonify({"msg" : "por favor ingresar admin_id"}), 401
+            return jsonify({"msg": "por favor ingresar admin_id"}), 401
         
         if not data["fecha_apertura"]:
-            return jsonify({"msg" : "por favor ingresar fecha apertura"}), 401
+            return jsonify({"msg": "por favor ingresar fecha apertura"}), 401
         
         if not data["fecha_cierre"]:
-            return jsonify({"msg" : "por favor ingresar fecha de cierre"}), 401
+            return jsonify({"msg": "por favor ingresar fecha de cierre"}), 401
         
         if not data["monto_apertura"]:
-            return jsonify({"msg" : "por favor ingresar monto de apertura"}), 401
+            return jsonify({"msg": "por favor ingresar monto de apertura"}), 401
 
         if not data["monto_transferencia"]:
-            return jsonify({"msg" : "por favor ingresar monto efectuado por transferencia"}), 401
+            return jsonify({"msg": "por favor ingresar monto efectuado por transferencia"}), 401
         
         if not data["monto_efectivo"]:
-            return jsonify({"msg" : "por favor ingresar monto efectuado en efectivo"}), 401
+            return jsonify({"msg": "por favor ingresar monto efectuado en efectivo"}), 401
         
         if not data["monto_tarjeta"]:
-            return jsonify({"msg" : "por favor ingresar monto efectuado por tarjeta"}), 401
+            return jsonify({"msg": "por favor ingresar monto efectuado por tarjeta"}), 401
         
         if not data["monto_cierre"]:
-            return jsonify({"msg" : "por favor ingresar monto de cierre"}), 401
+            return jsonify({"msg": "por favor ingresar monto de cierre"}), 401
         
         if not data["diferencia_en_caja"]:
-            return jsonify({"msg" : "por favor ingresar diferencia en caja"}), 401
+            return jsonify({"msg": "por favor ingresar diferencia en caja"}), 401
 
         cuadratura_caja = Cuadratura_Caja()
         cuadratura_caja.usuario_id = data["usuario_id"]
