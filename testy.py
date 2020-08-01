@@ -125,3 +125,39 @@ venta = {
         'forma_pago': 'efectivo'
     }
 }
+
+total_stock = []
+
+compras_por_producto_id = [
+    {'producto_id': 1, 'total_entrada': 8.0}, 
+    {'producto_id': 2, 'total_entrada': 258.0}, 
+    {'producto_id': 3, 'total_entrada': 7.0}, 
+    {'producto_id': 5, 'total_entrada': 173.0}, 
+    {'producto_id': 8, 'total_entrada': 1.0}
+]
+
+ventas_por_producto_id = [
+    {'producto_id': 1, 'total_salida': 5.0}, 
+    {'producto_id': 2, 'total_salida': 6.0}, 
+    {'producto_id': 3, 'total_salida': 4.0}, 
+    {'producto_id': 8, 'total_salida': 5.0}
+]
+
+total = [
+    {'producto_id': 1, 'total': 3.0}, 
+    {'producto_id': 2, 'total': 252.0}, 
+    {'producto_id': 3, 'total': 3.0},
+
+    {'producto_id': 5, 'total_entrada': 173.0},
+    {'producto_id': 6, 'total_entrada': 0},
+
+    {'producto_id': 8, 'total': -4.0}
+]
+
+for compra in compras_por_producto_id:
+    for venta in ventas_por_producto_id:
+        if compra['producto_id'] == venta['producto_id']:
+            total = compra['total_entrada'] - venta['total_entrada']
+            total_stock.append({"producto_id": compra['producto_id'], "total": total})
+            
+

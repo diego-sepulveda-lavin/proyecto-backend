@@ -900,27 +900,6 @@ def documentos_venta(id = None):
 
             documento_venta.salidas_I.append(salida_inventario)
 
-
-
-        """ 
-        'descripcion': 'Chocolate', 
-        'cantidad': 1, 
-        'precio_venta_unitario': 2000, 
-        'total': 2000, 
-        'producto_id': 1
-        """
-
-        """ id = db.Column(db.Integer, primary_key = True)
-        cantidad = db.Column(db.Float, nullable = False)
-        precio_costo_unitario = db.Column(db.Float, nullable = False)
-        precio_venta_unitario = db.Column(db.Float, nullable = False)
-        costo_total = db.Column(db.Float, nullable = False)
-        venta_total = db.Column(db.Float, nullable = False)
-        fecha_registro = db.Column(db.DateTime, nullable = False, default = datetime.now) #hora local
-        usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable = False)
-        documento_venta_id = db.Column(db.Integer, db.ForeignKey("documentos_ventas.id"), nullable = False)
-        producto_id = db.Column(db.Integer, db.ForeignKey("productos.id"), nullable = False) """
-
         tipo_documento = data['datosVenta']["tipo_documento"]
         documento_venta.save()    
         return jsonify({"msg": f"{tipo_documento.capitalize()} creada exitosamente."}), 201
@@ -1186,6 +1165,48 @@ def cuadratura_caja(id = None):
         cuadratura_caja.save()
        
         return jsonify({"msg": "cuadratura de caja creada exitosamente"}), 201
+
+@app.route("/api/stock", methods = ['GET'])
+def stock():
+
+    total_entradas = db.session.query(Entrada_Inventario.producto_id, db.func.sum(Entrada_Inventario.cantidad)).group_by(Entrada_Inventario.producto_id).all()
+
+    total_salidas = db.session.query(Salida_Inventario.producto_id, db.func.sum(Salida_Inventario.cantidad)).group_by(Salida_Inventario.producto_id).all()
+
+
+    compras_por_producto_id = []
+    for total_entrada in total_entradas:
+        compras_por_producto_id.append({"producto_id": total_entrada[0], "total_entrada": total_entrada[1]})
+
+    ventas_por_producto_id = []
+    for total_salida in total_salidas:
+        ventas_por_producto_id.append({"producto_id": total_salida[0], "total_salida": total_salida[1]})
+
+
+    total_stock = []
+    for compra in compras_por_producto_id:
+        for venta in ventas_por_producto_id:
+            if compra['producto_id'] == venta['producto_id']:
+                total = compra['total_entrada'] - venta['total_salida']
+                total_stock.append({"producto_id": compra['producto_id'], "total": total})
+
+
+    return jsonify(compras_por_producto_id, ventas_por_producto_id), 200
+
+@app.route('/api/test-producto', methods = ['GET'])
+def test_producto():
+
+    productos = Producto.query.all()
+    productos = list(map(lambda producto: producto.serialize_stock(), productos))
+
+
+
+
+    return jsonify(productos), 200
+
+
+
+
 
 if __name__ == "__main__":
     manager.run()
