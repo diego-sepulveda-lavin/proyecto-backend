@@ -37,7 +37,7 @@ class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     nombre = db.Column(db.String(100), nullable = False)
     apellido = db.Column(db.String(100), nullable = False)
-    codigo = db.Column(db.String(1000), unique = True)
+    codigo = db.Column(db.String(100), unique = True)
     rut = db.Column(db.String(13), nullable = False, unique = True)
     rol = db.Column(db.String(100), nullable = False)
     email = db.Column(db.String(100), nullable = False,  unique = True)
