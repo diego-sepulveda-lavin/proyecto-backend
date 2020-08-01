@@ -1141,7 +1141,7 @@ def cuadratura_caja(id=None):
 
 
 @app.route('/api/stock', methods=['GET'])
-@jwt_required
+#@jwt_required
 def stock():
     productos = Producto.query.all()
     productos = list(map(lambda producto: producto.serialize_stock(), productos))

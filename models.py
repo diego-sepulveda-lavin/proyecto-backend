@@ -235,13 +235,13 @@ class Producto(db.Model):
             "sku" : self.sku,
             "descripcion" : self.descripcion,
             "codigo_barra" : self.codigo_barra,
-            "cantidad" : (total_entrada - total_salida),
+            "inventario_disponible" : (total_entrada - total_salida),
             "unidad_entrega" : self.unidad_entrega,
             #"costo_neto_unitario": (costo_neto_unitario / total_entrada if total_entrada > 0 else 0),
             #"costo_neto_total":((costo_neto_unitario / total_entrada) * (total_entrada - total_salida) if total_entrada > 0 else 0),
             "categoria_id" : self.categoria_id,
             "precio_venta_unitario" : self.precio_venta_unitario,
-            "margen_contribucion" : self.margen_contribucion,
+            #"margen_contribucion" : self.margen_contribucion,
             #"entradas": entradas,
             #"salidas": salidas
         }
