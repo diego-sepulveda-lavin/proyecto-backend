@@ -179,6 +179,8 @@ def empresas(id=None):
     if request.method == 'GET':
         if not id:
             empresas = Empresa.query.all()
+            if not empresas:
+                return jsonify({"msg": "No hay empresas registradas."})
             empresas = list(map(lambda empresa: empresa.serialize(),empresas))
             return jsonify(empresas),200
 
@@ -771,7 +773,7 @@ def productos(id=None):
     # Creación de un nuevo producto
     if request.method == 'POST':
         data = request.get_json()
-        if not data["sku"]:
+        if not str(data["sku"]):
             return jsonify({"msg" : "SKU del producto nuevo no puede estar vacio"}), 401
         
         if not data["descripcion"]:
@@ -785,6 +787,8 @@ def productos(id=None):
         
         if not data["categoria_id"]:
             return jsonify({"msg" : "Seleccione Categoría"}), 401
+        
+
 
         producto_cb = Producto.query.filter_by(codigo_barra = data["codigo_barra"]).first()
         producto_desc = Producto.query.filter_by(descripcion = data["descripcion"]).first()
@@ -801,7 +805,8 @@ def productos(id=None):
         producto.descripcion = data["descripcion"]
         producto.codigo_barra = data["codigo_barra"]
         producto.unidad_entrega = data["unidad_entrega"]
-        producto.categoria_id = data["categoria_id"]  # revisar porque es una FK
+        producto.precio_venta_unitario = data["precio_venta_unitario"]
+        producto.categoria_id = data["categoria_id"] #revisar porque es una FK
         producto.save()
        
         return jsonify(producto.serialize()), 200
@@ -918,6 +923,8 @@ def proveedores(id=None):
         # DEVUELVE LISTADO CON TODOS LOS PROVEEDORES
         if not id:
             proveedores = Proveedor.query.all()
+            if not proveedores:
+                return jsonify({"msg": "No hay proveedores."})
             proveedores = list(map(lambda proveedor: proveedor.serialize(), proveedores))
             return jsonify(proveedores), 200
 
@@ -1053,8 +1060,8 @@ def categorias(id=None):
             categorias = Categoria.query.all()
             if categorias:
                 categorias = list(map(lambda categoria: categoria.serialize(), categorias))
-                return jsonify (categorias), 200
-            return jsonify({"msg": "Categoria no existente"}), 400
+                return jsonify (categorias),200
+            return jsonify({"msg": "Actualmente no hay categorías"}), 400
         categoria = Categoria.query.get(id)
         if id:
             categoria = Categoria.query.get(id)
