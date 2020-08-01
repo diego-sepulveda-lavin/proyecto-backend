@@ -90,6 +90,7 @@ class Entrada_Inventario(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable = False)
     factura_compra_id = db.Column(db.Integer, db.ForeignKey("facturas_compras.id"), nullable = False)
     producto_id = db.Column(db.Integer, db.ForeignKey("productos.id"), nullable = False)
+    #producto_e = db.relationship("Producto", backref="entrada", lazy = True)
     #facturaC = db.relationship("Factura_Compra", backref= "entradas", lazy = True)
 
 
@@ -200,8 +201,8 @@ class Producto(db.Model):
     categoria_id = db.Column(db.Integer, db.ForeignKey("categorias.id"), nullable = False)
     precio_venta_unitario = db.Column(db.Float, nullable = True)
     margen_contribucion = db.Column(db.Float, nullable = True)
-    entradaI = db.relationship("Entrada_Inventario", foreign_keys="[Entrada_Inventario.producto_id]", backref = "producto", lazy = True, uselist= False)
-    salidaI = db.relationship("Salida_Inventario", foreign_keys="[Salida_Inventario.producto_id]", backref = "producto", lazy = True, uselist = False)
+    entradasI = db.relationship("Entrada_Inventario", foreign_keys="[Entrada_Inventario.producto_id]", backref = "producto", lazy = True)
+    salidasI = db.relationship("Salida_Inventario", foreign_keys="[Salida_Inventario.producto_id]", backref = "producto", lazy = True)
     
     def serialize(self):
         return {
@@ -214,6 +215,37 @@ class Producto(db.Model):
             "precio_venta_unitario" : self.precio_venta_unitario,
             "margen_contribucion" : self.margen_contribucion,
         }
+
+    def serialize_stock(self):
+        #entradas = list(map(lambda entrada: entrada.serialize(), self.entradasI))
+        #salidas = list(map(lambda salida: salida.serialize(), self.salidasI))
+        total_entrada = 0
+        total_salida = 0
+        costo_neto_unitario = 0
+        costo_neto_total = 0
+
+        for entrada in self.entradasI:
+            total_entrada = total_entrada + entrada.cantidad
+        
+        for salida in self.salidasI:
+            total_salida = total_salida + salida.cantidad
+
+        return {
+            "id" : self.id,
+            "sku" : self.sku,
+            "descripcion" : self.descripcion,
+            "codigo_barra" : self.codigo_barra,
+            "cantidad" : (total_entrada - total_salida),
+            "unidad_entrega" : self.unidad_entrega,
+            #"costo_neto_unitario": (costo_neto_unitario / total_entrada if total_entrada > 0 else 0),
+            #"costo_neto_total":((costo_neto_unitario / total_entrada) * (total_entrada - total_salida) if total_entrada > 0 else 0),
+            "categoria_id" : self.categoria_id,
+            "precio_venta_unitario" : self.precio_venta_unitario,
+            "margen_contribucion" : self.margen_contribucion,
+            #"entradas": entradas,
+            #"salidas": salidas
+        }
+
 
     def save(self):
         db.session.add(self)
