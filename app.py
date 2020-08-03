@@ -243,10 +243,10 @@ def empresas(id=None):
             return jsonify({"msg": "Razon social de empresa ya se encuentra registrado"}), 400
 
         empresa = Empresa()
-        empresa.nombre = nombre
+        empresa.nombre = nombre.capitalize()
         empresa.rut = rut
-        empresa.razon_social = razon_social
-        empresa.rubro = rubro
+        empresa.razon_social = razon_social.capitalize()
+        empresa.rubro = rubro.capitalize()
         empresa.save()
 
         return jsonify(empresa.serialize()), 200
@@ -372,10 +372,10 @@ def usuarios(id=None):
                 return jsonify({"msg": "File Not Allowed!"}), 400 
 
         usuario = Usuario()
-        usuario.nombre = nombre
-        usuario.apellido = apellido
+        usuario.nombre = nombre.capitalize()
+        usuario.apellido = apellido.capitalize()
         usuario.rut = rut
-        usuario.rol = rol
+        usuario.rol = rol.capitalize()
         usuario.email = email
         usuario.password = bcrypt.generate_password_hash(password).decode("utf-8")
         usuario.empresa_id = 1 
@@ -417,12 +417,12 @@ def usuarios(id=None):
             if nombre is not None:
                 if nombre == "":
                     return jsonify({"msg": "Nombre no puede ir vacío."}), 400
-                usuario_actualizar.nombre = nombre
+                usuario_actualizar.nombre = nombre.capitalize()
 
             if apellido is not None:
                 if apellido == "":
                     return jsonify({"msg": "Apellido no puede ir vacío."}), 400
-                usuario_actualizar.apellido = apellido 
+                usuario_actualizar.apellido = apellido.capitalize()
                 
             if rut is not None:
                 if rut == "":
@@ -432,7 +432,7 @@ def usuarios(id=None):
             if rol is not None:
                 if rol == "":
                     return jsonify({"msg": "Rol no puede ir vacío."}), 400
-                usuario_actualizar.rol = rol
+                usuario_actualizar.rol = rol.capitalize()
 
             if email is not None:
                 if email == "":
@@ -783,7 +783,7 @@ def productos(id=None):
         
         producto = Producto()
         producto.sku = data["sku"]
-        producto.descripcion = data["descripcion"]
+        producto.descripcion = data["descripcion"].capitalize()
         producto.codigo_barra = data["codigo_barra"]
         producto.unidad_entrega = data["unidad_entrega"]
         producto.precio_venta_unitario = data["precio_venta_unitario"]
@@ -831,7 +831,7 @@ def productos(id=None):
 
             producto_a_modificar = Producto.query.get(id)
             if producto_a_modificar:
-                producto_a_modificar.descripcion = descripcion
+                producto_a_modificar.descripcion = descripcion.capitalize()
                 producto_a_modificar.codigo_barra = codigo_barra
                 producto_a_modificar.unidad_entrega = unidad_entrega
                 producto_a_modificar.categoria_id = categoria_id
@@ -978,11 +978,11 @@ def proveedores(id=None):
             return jsonify({"msg": "Razon social de empresa ya se encuentra registrado"}), 400
 
         proveedor = Proveedor()
-        proveedor.nombre = nombre
+        proveedor.nombre = nombre.capitalize()
         proveedor.rut = rut
-        proveedor.razon_social = razon_social
-        proveedor.rubro = rubro
-        proveedor.direccion = direccion
+        proveedor.razon_social = razon_social.capitalize()
+        proveedor.rubro = rubro.capitalize()
+        proveedor.direccion = direccion.capitalize()
         proveedor.cuenta_corriente = cuenta_corriente
         proveedor.banco = banco
 
@@ -1018,7 +1018,7 @@ def proveedores(id=None):
         if nombre is not None:
             if not nombre:
                 return jsonify({"msg": "Nombre no puede estar vacío"}), 400
-            proveedor.nombre = nombre
+            proveedor.nombre = nombre.capitalize()
 
         if rut is not None:
             if not rut:
@@ -1028,17 +1028,17 @@ def proveedores(id=None):
         if razon_social is not None:
             if not razon_social:
                 return jsonify({"msg": "Razon Social no puede estar vacía"}), 400
-            proveedor.razon_social = razon_social
+            proveedor.razon_social = razon_social.capitalize()
         
         if rubro is not None:
             if not rubro:
                 return jsonify({"msg": "Rubro no puede estar vacío"}), 400
-            proveedor.rubro = rubro
+            proveedor.rubro = rubro.capitalize()
         
         if direccion is not None:
             if not direccion:
                 return jsonify({"msg": "Dirección no puede estar vacío"}), 400
-            proveedor.direccion = direccion
+            proveedor.direccion = direccion.capitalize()
 
         if cuenta_corriente is not None:
             proveedor.cuenta_corriente = cuenta_corriente
@@ -1088,7 +1088,7 @@ def categorias(id=None):
             return jsonify({"msg": "Categoría ya existe"})
 
         categoria = Categoria()
-        categoria.nombre = nombre
+        categoria.nombre = nombre.capitalize()
         
         categoria.save()    
         return jsonify(categoria.serialize()), 200
@@ -1104,7 +1104,12 @@ def categorias(id=None):
         if not categoria_update:
             return jsonify({"msg": "Categoría no se encuentra en el sistema"}), 400
         
-        categoria_update.nombre = nombre
+        categoria_ocupada = Categoria.query.filter_by(nombre=nombre).first()
+        if categoria_ocupada and categoria_ocupada.id != id:
+            return jsonify({"msg": "Categoría ya se encuentra registrada."}), 400
+        
+        
+        categoria_update.nombre = nombre.capitalize()
         categoria_update.update()
         
         return jsonify(categoria_update.serialize()), 200
