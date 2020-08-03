@@ -168,6 +168,26 @@ def login():
     return jsonify(data), 200
 
 
+@app.route("/api/valida-Caja", methods=["POST"])
+@jwt_required
+def valida_caja():
+    administrador = request.json.get("administrador", None)
+    password = request.json.get("password", None)
+
+    if not administrador or not password:
+        return jsonify({"msg": "Faltan campos de Administrador"}), 400
+
+    admin_valido = Usuario.query.filter_by(codigo=administrador).first()
+    if not admin_valido:
+        return jsonify({"msg": "Administrador inválido"}), 400
+    if admin_valido.rol != "Admin":
+        return jsonify({"msg": "Dato ingresado no figura como Administrador"}), 400
+    if bcrypt.check_password_hash(admin_valido.password, password):
+        return jsonify({"msg": "Apertura Exitosa"}), 200
+    else:
+        return jsonify({"msg": "Validación Administrador incorrecta"}), 400
+
+
 @app.route('/api/empresas', methods=['GET', "POST"])
 @app.route('/api/empresas/<int:id>', methods=['GET', "PUT", "DELETE"])
 @jwt_required
@@ -248,7 +268,7 @@ def empresas(id=None):
                 return jsonify({"msg": "Rut ya se encuentra registrado."}), 400
 
             razon_social_ocupado = Empresa.query.filter_by(razon_social=razon_social).first()
-            if razon_social_ocupado and razon_social_ocupado != id:
+            if razon_social_ocupado and razon_social_ocupado.id != id:
                 return jsonify({"msg": "Razon social ya se encuentra registrada."}), 400
 
             if nombre is not None:
@@ -274,25 +294,6 @@ def empresas(id=None):
             empresa_actualizar.update()
             return jsonify(empresa_actualizar.serialize()), 200
 
-
-@app.route("/api/valida-Caja", methods=["POST"])
-@jwt_required
-def valida_caja():
-    administrador = request.json.get("administrador", None)
-    password = request.json.get("password", None)
-
-    if not administrador or not password:
-        return jsonify({"msg": "Faltan campos de Administrador"}), 400
-
-    admin_valido = Usuario.query.filter_by(codigo=administrador).first()
-    if not admin_valido:
-        return jsonify({"msg": "Administrador inválido"}), 400
-    if admin_valido.rol != "Admin":
-        return jsonify({"msg": "Dato ingresado no figura como Administrador"}), 400
-    if bcrypt.check_password_hash(admin_valido.password, password):
-        return jsonify({"msg": "Apertura Exitosa"}), 200
-    else:
-        return jsonify({"msg": "Validación Administrador incorrecta"}), 400
 
 
 @app.route("/api/usuarios", methods=["GET", "POST"])
